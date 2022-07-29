@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, Response, Sse } from '@nestjs/common';
+import { Body, Controller, Param, Post, Response, Sse, HttpStatus } from '@nestjs/common';
 import { DapiService } from './dapi.service';
 import { OIS } from '@api3/ois';
 import { nanoid } from 'nanoid';
@@ -15,12 +15,25 @@ export class DapiController {
         // validate ois
         // if ok
         const jobId = nanoid(10);
-        res.json({ "job": jobId });
+        res.json({ "msg": "OK", code: 200, "job": jobId });
+        console.log(ois);
         this.dapiService.submit(ois, jobId);
+    }
+
+    @Post("/acquire")
+    async acquire(@Body() requester: string, @Response() res) {
+        try {
+            let ret = await this.dapiService.acquire(requester);
+            res.json({...ret, ...{"msg": "OK", "code": 200}});
+        } catch (e) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ "msg": e.message, "code": 500 });
+        }
     }
 
     @Sse('/sse/:_id')
     sse(@Param() params): Observable<MessageEvent> {
-        return interval(1000).pipe(map(() => ({ data: this.dapiService.status.get(params._id), id: params._id } as unknown as MessageEvent)));
+        console.log(params._id);
+        return interval(1000).pipe(map(() => (
+            { data: this.dapiService.fetch(params._id).get(params._id) || 'hello world'} as MessageEvent)));
     }
 }

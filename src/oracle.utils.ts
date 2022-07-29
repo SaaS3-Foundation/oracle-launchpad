@@ -8,3 +8,5 @@ export async function generateMnemonic() {
 export async function derive(mnemonic: string) {
     return ethers.Wallet.fromMnemonic(mnemonic).address;
 }
+
+export const formatSecrets = (secrets: string[]) => secrets.join('\n') + '\n';

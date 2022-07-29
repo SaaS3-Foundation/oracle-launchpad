@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@api3/ois": "^1.1.1",
+    "@api3/airnode-node": "^0.7.1",
     "@nestjs/common": "^9.0.0",
     "@nestjs/core": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",
