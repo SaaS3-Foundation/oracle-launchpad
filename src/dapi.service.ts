@@ -1,6 +1,7 @@
 import { OIS } from '@api3/ois';
 import { Injectable, SerializeOptions } from '@nestjs/common';
 import { existsSync, mkdirSync } from 'fs';
+import { interval, map, Observable } from 'rxjs';
 import * as composer from './oracle.composer';
 
 enum JobStatus {
@@ -22,6 +23,7 @@ function delay(ms: number) {
 }
 
 function workspace(dir: string) {
+  dir = 'workspace/' + dir + '/config';
   if (!existsSync(dir)) {
     mkdirSync(dir, {
       recursive: true
@@ -36,10 +38,11 @@ export class DapiService {
     this.status = new Map();
   }
 
-  fetch(jobId: string): Map<string, JobStatus> {
-    console.log(this.status, this.status.get(jobId));
-    // return this.status.get(jobId);
-    return this.status;
+  fetch(jobId: string): Observable<MessageEvent> {
+    console.log(this.status, jobId);
+    console.log(this.status.get(jobId).toString());
+    return interval(3000).pipe(map((_) => (
+      { data: this.status.get(jobId).toString() } as MessageEvent )));
   }
 
   async acquire(requester: string) {
@@ -47,13 +50,13 @@ export class DapiService {
     return { sponsor: sponsor, requester: requester };
   }
 
-  async submit(ois: OIS, jobId: string) {
+  async submit(ois: string, jobId: string) {
     this.status.set(jobId, JobStatus.PENDING);
     // TODO: save input to database
 
     workspace(jobId);
+    console.log(ois);
 
-    ois.title.replace(' ', '_');
 
     // GENERATING_AIRNODE_ADDRESS
     this.status.set(jobId, JobStatus.GENERATING_AIRNODE_ADDRESS);
@@ -75,16 +78,16 @@ export class DapiService {
 
     // GENERATE_AIRNODE_CONFIG
     this.status.set(jobId, JobStatus.GENERATING_AIRNODE_CONFIG);
-    await delay(3000);
+    composer.generateConfig(jobId, ois);
 
     // GENERATE_AIRNODE_SECRET
     this.status.set(jobId, JobStatus.GENERATING_AIRNODE_SECRET);
     await composer.generateSecrets(jobId, mnemonic);
-    await delay(3000);
 
     // DEPLOYING_AIRNODE_TO_AWS
     this.status.set(jobId, JobStatus.DEPLOYING_AIRNODE);
-    await delay(30000);
+
+    await composer.deployAirnode(jobId);
 
     this.status.set(jobId, JobStatus.DONE);
   }

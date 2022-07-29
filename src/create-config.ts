@@ -1,13 +1,13 @@
 import { Config } from '@api3/airnode-node';
 
 
-const createConfig = async (airnodeAddress: string, chainId: string): Promise<Config> => ({
+export const createConfig = async (airnodeRrpAddress: string, chainId: string, oises: [any]): Promise<Config> => ({
   chains: [
     {
       maxConcurrency: 100,
       authorizers: [],
       contracts: {
-        AirnodeRrp: airnodeAddress,
+        AirnodeRrp: airnodeRrpAddress,
       },
       id: chainId,
       providers: {
@@ -23,7 +23,11 @@ const createConfig = async (airnodeAddress: string, chainId: string): Promise<Co
     },
   ],
   nodeSettings: {
-    cloudProvider: null,
+    cloudProvider: {
+      "type": "aws",
+      "region": "us-east-1",
+      "disableConcurrencyReservations": true
+    },
     airnodeWalletMnemonic: '${AIRNODE_WALLET_MNEMONIC}',
     heartbeat: {
       enabled: false,
@@ -36,7 +40,7 @@ const createConfig = async (airnodeAddress: string, chainId: string): Promise<Co
     },
     logFormat: 'plain',
     logLevel: 'DEBUG',
-    nodeVersion: "1.0.0",
+    nodeVersion: "0.7.2",
     stage: 'dev',
   },
   triggers: {
@@ -45,8 +49,6 @@ const createConfig = async (airnodeAddress: string, chainId: string): Promise<Co
     httpSignedData: [],
   },
   templates: [],
-  ois: [],
+  ois: oises,
   apiCredentials: [],
 });
-
-export default createConfig;

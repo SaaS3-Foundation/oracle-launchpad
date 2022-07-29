@@ -11,7 +11,7 @@ export class DapiController {
     constructor(private readonly dapiService: DapiService) { }
 
     @Post('/submit')
-    async submit(@Body() ois: OIS, @Response() res) {
+    async submit(@Body() ois: any, @Response() res) {
         // validate ois
         // if ok
         const jobId = nanoid(10);
@@ -32,8 +32,6 @@ export class DapiController {
 
     @Sse('/sse/:_id')
     sse(@Param() params): Observable<MessageEvent> {
-        console.log(params._id);
-        return interval(1000).pipe(map(() => (
-            { data: this.dapiService.fetch(params._id).get(params._id) || 'hello world'} as MessageEvent)));
+        return this.dapiService.fetch(params._id);
     }
 }

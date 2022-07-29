@@ -10,3 +10,8 @@ export async function derive(mnemonic: string) {
 }
 
 export const formatSecrets = (secrets: string[]) => secrets.join('\n') + '\n';
+
+export function deriveEndpointId(oisTitle: string, endpointName: string) {
+    return ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(['string', 'string'], [oisTitle, endpointName]));
+  }
