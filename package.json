@@ -21,8 +21,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@api3/ois": "^1.1.1",
     "@api3/airnode-node": "^0.7.1",
+    "@api3/ois": "^1.1.1",
     "@nestjs/common": "^9.0.0",
     "@nestjs/core": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",
@@ -30,15 +30,18 @@
     "@nestjs/websockets": "^9.0.5",
     "ethers": "^5.6.9",
     "nanoid": "^3.0.0",
-    "uuid": "*",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
-    "rxjs": "^7.2.0"
+    "rxjs": "^7.2.0",
+    "uuid": "*",
+    "web3": "^1.7.5"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.0.0",
     "@nestjs/schematics": "^9.0.0",
     "@nestjs/testing": "^9.0.0",
+    "@nomiclabs/hardhat-ethers": "^2.1.0",
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
     "@types/express": "^4.17.13",
     "@types/jest": "28.1.4",
     "@types/node": "^16.0.0",
@@ -48,6 +51,8 @@
     "eslint": "^8.0.1",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
+    "hardhat": "^2.10.1",
+    "hardhat-dependency-compiler": "^1.1.3",
     "jest": "28.1.2",
     "prettier": "^2.3.2",
     "source-map-support": "^0.5.20",

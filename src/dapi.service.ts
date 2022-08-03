@@ -1,3 +1,4 @@
+import { contracts } from '@api3/airnode-node/dist/src/evm';
 import { OIS } from '@api3/ois';
 import { Injectable, SerializeOptions } from '@nestjs/common';
 import { existsSync, mkdirSync } from 'fs';
@@ -23,9 +24,16 @@ function delay(ms: number) {
 }
 
 function workspace(dir: string) {
-  dir = 'workspace/' + dir + '/config';
-  if (!existsSync(dir)) {
-    mkdirSync(dir, {
+  let cfg = 'workspace/' + dir + '/config';
+  if (!existsSync(cfg)) {
+    mkdirSync(cfg, {
+      recursive: true
+    });
+  }
+
+  let c = 'workspace/' + dir + '/contracts';
+  if (!existsSync(c)) {
+    mkdirSync(c, {
       recursive: true
     });
   }
@@ -50,12 +58,15 @@ export class DapiService {
     return { sponsor: sponsor, requester: requester };
   }
 
-  async submit(ois: string, jobId: string) {
+  async submit(ois: any, jobId: string) {
     this.status.set(jobId, JobStatus.PENDING);
     // TODO: save input to database
 
     workspace(jobId);
     console.log(ois);
+
+    let requesterName = ois['title'].replace(/\s/g, '');
+    console.log(requesterName);
 
 
     // GENERATING_AIRNODE_ADDRESS
@@ -64,21 +75,21 @@ export class DapiService {
     console.log('airnode info:', `mnemonic: ${mnemonic}`, `address: ${address}`);
 
 
-    // TODO: GENERATING_REQUESTER_CONTRACT
     this.status.set(jobId, JobStatus.GENERATING_REQUESTER_CONTRACT);
-    await delay(3000);
+    await composer.generateRequester(jobId, address, requesterName);
 
     // TODO: DEPLOYING_REQUESTER_CONTRACT
     this.status.set(jobId, JobStatus.DEPLOYING_REQUESTER_CONTRACT);
-    await delay(3000);
+    let requester = await composer.deployRequester(jobId, requesterName);
+    console.log(`Requester contract deployed, and requester address is ${requester}`);
 
     // SPONOR_REQUESTER_CONTRACT
     this.status.set(jobId, JobStatus.SPONSORING_REQUESTER_CONTRACT);
-    await delay(3000);
+    await composer.sponsorRequester(requester.address);
 
     // GENERATE_AIRNODE_CONFIG
     this.status.set(jobId, JobStatus.GENERATING_AIRNODE_CONFIG);
-    composer.generateConfig(jobId, ois);
+    await composer.generateConfig(jobId, ois);
 
     // GENERATE_AIRNODE_SECRET
     this.status.set(jobId, JobStatus.GENERATING_AIRNODE_SECRET);
@@ -87,7 +98,7 @@ export class DapiService {
     // DEPLOYING_AIRNODE_TO_AWS
     this.status.set(jobId, JobStatus.DEPLOYING_AIRNODE);
 
-    await composer.deployAirnode(jobId);
+    // await composer.deployAirnode(jobId);
 
     this.status.set(jobId, JobStatus.DONE);
   }
