@@ -12,13 +12,13 @@ export const createConfig = async (airnodeRrpAddress: string, chainId: string, o
       id: chainId,
       providers: {
         "saas3": {
-          url: '${PROVIDER_URL}',
+          url: '${CHAIN_PROVIDER_URL}',
         },
       },
       type: 'evm',
       options: {
-        fulfillmentGasLimit: 500_000,
         "txType": "eip1559",
+        fulfillmentGasLimit: 500_000,
       },
     },
   ],
@@ -33,7 +33,9 @@ export const createConfig = async (airnodeRrpAddress: string, chainId: string, o
       enabled: false,
     },
     httpGateway: {
-      enabled: false,
+      enabled: true,
+      apiKey: '${HTTP_GATEWAY_API_KEY}',
+      maxConcurrency: 10,
     },
     httpSignedDataGateway: {
       enabled: false,

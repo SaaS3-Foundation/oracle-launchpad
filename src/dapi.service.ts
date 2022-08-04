@@ -62,23 +62,25 @@ export class DapiService {
     this.status.set(jobId, JobStatus.PENDING);
     // TODO: save input to database
 
+    console.log("================", jobId, "================");
     workspace(jobId);
     console.log(ois);
 
     let requesterName = ois['title'].replace(/\s/g, '');
-    console.log(requesterName);
+    console.log('RequseterName', requesterName);
 
 
     // GENERATING_AIRNODE_ADDRESS
     this.status.set(jobId, JobStatus.GENERATING_AIRNODE_ADDRESS);
     const [mnemonic, address] = await composer.generateAirnodeAddress();
-    console.log('airnode info:', `mnemonic: ${mnemonic}`, `address: ${address}`);
+    console.log('Airnode mnemonic:', mnemonic);
+    console.log('Airnode address:', address);
 
 
     this.status.set(jobId, JobStatus.GENERATING_REQUESTER_CONTRACT);
     await composer.generateRequester(jobId, address, requesterName);
 
-    // TODO: DEPLOYING_REQUESTER_CONTRACT
+    // DEPLOYING_REQUESTER_CONTRACT
     this.status.set(jobId, JobStatus.DEPLOYING_REQUESTER_CONTRACT);
     let requester = await composer.deployRequester(jobId, requesterName);
     console.log(`Requester contract deployed, and requester address is ${requester}`);
@@ -98,8 +100,9 @@ export class DapiService {
     // DEPLOYING_AIRNODE_TO_AWS
     this.status.set(jobId, JobStatus.DEPLOYING_AIRNODE);
 
-    // await composer.deployAirnode(jobId);
+    await composer.deployAirnode(jobId);
 
     this.status.set(jobId, JobStatus.DONE);
+    console.log("================", 'END', "================");
   }
 }

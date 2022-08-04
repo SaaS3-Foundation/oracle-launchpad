@@ -16,7 +16,6 @@ export class DapiController {
         // if ok
         const jobId = nanoid(10);
         res.json({ "msg": "OK", code: 200, "job": jobId });
-        console.log(ois);
         this.dapiService.submit(ois, jobId);
     }
 

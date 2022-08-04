@@ -4,7 +4,7 @@ import { writeFileSync, readdirSync, existsSync } from 'fs';
 import { join } from 'path';
 import { OIS } from '@api3/ois';
 import { createConfig } from './create-config';
-import { createHardhatConfig, createRequester, createTestRequester } from './create-contract';
+import { createHardhatConfig, createRequester} from './create-contract';
 import { v4 as uuidv4 } from 'uuid';
 import { ethers } from 'ethers';
 import Web3 from 'web3';
@@ -43,7 +43,7 @@ export async function sponsorRequester(requester: string) {
      --airnode-rrp-address ${airnodeRrp} \
      --sponsor-mnemonic "${sponsorMnemonic}" \
      --requester-address ${requester}`;
-    console.log("sposor cmd:", cmd);
+    console.log("Sponsoring cmd:\n", cmd);
     execSync(cmd)
 }
 
@@ -80,7 +80,6 @@ export async function generateEndpointsFromApiSpec(o: any) {
 export async function generateRequester(jobId: string, airnodeAddress: string, requesterName: string) {
     // generate contract
     let requesterContract = await createRequester(airnodeAddress, sponsor, sponsorWallet, requesterName);
-    console.log(requesterContract);
     writeFileSync(join('workspace', jobId, `contracts/${requesterName}.sol`), requesterContract);
 
     // generate hardhat config
@@ -130,7 +129,7 @@ async function deployWithEtherjs(abi: any, bytecode: string) {
 export const deployRequester = async (jobId: string, requesterName: string) => {
     const artifact = getArtifact(jobId, requesterName);
 
-    console.log("Deploying contract...");
+    console.log("Deploying contract", requesterName, "...");
 
     return deployWithWeb3(artifact.abi, artifact.bytecode);
 
@@ -166,7 +165,7 @@ export async function generateSecrets(jobId: string, mnemonic: string) {
     let apiKey = uuidv4();
     writeFileSync(join('workspace', jobId, 'config', "secrets.env"), utils.formatSecrets([
         `AIRNODE_WALLET_MNEMONIC=${mnemonic}`,
-        `PROVIDER_URL=${provider}`,
+        `CHAIN_PROVIDER_URL=${provider}`,
         `HTTP_GATEWAY_API_KEY=${apiKey}`,
     ]));
 }
