@@ -3,6 +3,7 @@ import { OIS } from '@api3/ois';
 import { Injectable, SerializeOptions } from '@nestjs/common';
 import { existsSync, mkdirSync } from 'fs';
 import { interval, map, Observable } from 'rxjs';
+import { EventsGateway } from './events.gateway';
 import * as composer from './oracle.composer';
 
 enum JobStatus {
@@ -41,16 +42,12 @@ function workspace(dir: string) {
 
 @Injectable()
 export class DapiService {
-  status: Map<string, JobStatus>;
-  public constructor() {
-    this.status = new Map();
+  public constructor(private readonly ws: EventsGateway) {
   }
 
-  fetch(jobId: string): Observable<MessageEvent> {
-    console.log(this.status, jobId);
-    console.log(this.status.get(jobId).toString());
-    return interval(3000).pipe(map((_) => (
-      { data: this.status.get(jobId).toString() } as MessageEvent )));
+
+  emit(jobId: string, s: JobStatus) {
+    this.ws.server.emit('status', { jobId: jobId, status: JobStatus[s] });
   }
 
   async acquire(requester: string) {
@@ -59,7 +56,8 @@ export class DapiService {
   }
 
   async submit(ois: any, jobId: string) {
-    this.status.set(jobId, JobStatus.PENDING);
+    this.emit(jobId, JobStatus.PENDING);
+
     // TODO: save input to database
 
     console.log("================", jobId, "================");
@@ -71,38 +69,38 @@ export class DapiService {
 
 
     // GENERATING_AIRNODE_ADDRESS
-    this.status.set(jobId, JobStatus.GENERATING_AIRNODE_ADDRESS);
+    this.emit(jobId, JobStatus.GENERATING_AIRNODE_ADDRESS);
     const [mnemonic, address] = await composer.generateAirnodeAddress();
     console.log('Airnode mnemonic:', mnemonic);
     console.log('Airnode address:', address);
 
 
-    this.status.set(jobId, JobStatus.GENERATING_REQUESTER_CONTRACT);
+    this.emit(jobId, JobStatus.GENERATING_REQUESTER_CONTRACT);
     await composer.generateRequester(jobId, address, requesterName);
 
     // DEPLOYING_REQUESTER_CONTRACT
-    this.status.set(jobId, JobStatus.DEPLOYING_REQUESTER_CONTRACT);
+    this.emit(jobId, JobStatus.DEPLOYING_REQUESTER_CONTRACT);
     let requester = await composer.deployRequester(jobId, requesterName);
-    console.log(`Requester contract deployed, and requester address is ${requester}`);
+    console.log(`Requester contract deployed, and requester is ${requester}`);
 
     // SPONOR_REQUESTER_CONTRACT
-    this.status.set(jobId, JobStatus.SPONSORING_REQUESTER_CONTRACT);
+    this.emit(jobId, JobStatus.SPONSORING_REQUESTER_CONTRACT);
     await composer.sponsorRequester(requester.address);
 
     // GENERATE_AIRNODE_CONFIG
-    this.status.set(jobId, JobStatus.GENERATING_AIRNODE_CONFIG);
+    this.emit(jobId, JobStatus.GENERATING_AIRNODE_CONFIG)
     await composer.generateConfig(jobId, ois);
 
     // GENERATE_AIRNODE_SECRET
-    this.status.set(jobId, JobStatus.GENERATING_AIRNODE_SECRET);
+    this.emit(jobId, JobStatus.GENERATING_AIRNODE_SECRET);
     await composer.generateSecrets(jobId, mnemonic);
 
     // DEPLOYING_AIRNODE_TO_AWS
-    this.status.set(jobId, JobStatus.DEPLOYING_AIRNODE);
+    this.emit(jobId, JobStatus.DEPLOYING_AIRNODE)
 
     await composer.deployAirnode(jobId);
 
-    this.status.set(jobId, JobStatus.DONE);
+    this.emit(jobId, JobStatus.DONE);
     console.log("================", 'END', "================");
   }
 }

@@ -28,9 +28,4 @@ export class DapiController {
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ "msg": e.message, "code": 500 });
         }
     }
-
-    @Sse('/sse/:_id')
-    sse(@Param() params): Observable<MessageEvent> {
-        return this.dapiService.fetch(params._id);
-    }
 }
