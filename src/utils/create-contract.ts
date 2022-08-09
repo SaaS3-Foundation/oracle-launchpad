@@ -20,10 +20,10 @@ contract ${requesterName} is RrpRequesterV0 {
         bytes calldata parameters
     ) external {
         bytes32 requestId = airnodeRrp.makeFullRequest(
-            ${airnodeAddress},
+            address(${airnodeAddress}),
             endpointId,
-            ${sponsor},
-            ${sponsorWallet},
+            address(${sponsor}),
+            address(${sponsorWallet}),
             address(this),
             this.fulfill.selector,
             parameters

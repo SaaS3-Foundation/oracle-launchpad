@@ -7,7 +7,7 @@ import { EventsGateway } from './events.gateway';
 import * as composer from './oracle.composer';
 
 enum JobStatus {
-  PENDING, // 0%
+  PENDING = 0, // 0%
   GENERATING_REQUESTER_CONTRACT, // 30s, 0-4%
   DEPLOYING_REQUESTER_CONTRACT, // 2min, 4-20%
   GENERATING_AIRNODE_ADDRESS, // 30s, 20 - 24%
@@ -47,7 +47,7 @@ export class DapiService {
 
 
   emit(jobId: string, s: JobStatus) {
-    this.ws.server.emit('status', { jobId: jobId, status: JobStatus[s] });
+  this.ws.server.emit('status', { jobId: jobId, status: JobStatus[s], progress: s*10});
   }
 
   async acquire(requester: string) {
@@ -70,7 +70,8 @@ export class DapiService {
 
     // GENERATING_AIRNODE_ADDRESS
     this.emit(jobId, JobStatus.GENERATING_AIRNODE_ADDRESS);
-    const [mnemonic, address] = await composer.generateAirnodeAddress();
+    // const [mnemonic, address] = await composer.generateAirnodeAddress();
+    const [mnemonic, address] = ["taxi balance fine alert urban trip forum student question job hazard devote", "0x2156217a193B4bC6c3c24012611D124310663060"];
     console.log('Airnode mnemonic:', mnemonic);
     console.log('Airnode address:', address);
 
@@ -79,13 +80,13 @@ export class DapiService {
     await composer.generateRequester(jobId, address, requesterName);
 
     // DEPLOYING_REQUESTER_CONTRACT
-    this.emit(jobId, JobStatus.DEPLOYING_REQUESTER_CONTRACT);
-    let requester = await composer.deployRequester(jobId, requesterName);
-    console.log(`Requester contract deployed, and requester is ${requester}`);
+    //this.emit(jobId, JobStatus.DEPLOYING_REQUESTER_CONTRACT);
+    //let requester = await composer.deployRequester(jobId, requesterName);
+    //console.log(`Requester contract deployed, and requester is ${requester}`);
 
     // SPONOR_REQUESTER_CONTRACT
-    this.emit(jobId, JobStatus.SPONSORING_REQUESTER_CONTRACT);
-    await composer.sponsorRequester(requester.address);
+    //this.emit(jobId, JobStatus.SPONSORING_REQUESTER_CONTRACT);
+    //await composer.sponsorRequester(requester.address);
 
     // GENERATE_AIRNODE_CONFIG
     this.emit(jobId, JobStatus.GENERATING_AIRNODE_CONFIG)
@@ -98,7 +99,7 @@ export class DapiService {
     // DEPLOYING_AIRNODE_TO_AWS
     this.emit(jobId, JobStatus.DEPLOYING_AIRNODE)
 
-    await composer.deployAirnode(jobId);
+    // await composer.deployAirnode(jobId);
 
     this.emit(jobId, JobStatus.DONE);
     console.log("================", 'END', "================");

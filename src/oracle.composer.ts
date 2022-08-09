@@ -1,10 +1,10 @@
-import * as utils from "./oracle.utils";
+import * as utils from "./utils/oracle.utils";
 import { execSync } from 'child_process';
 import { writeFileSync, readdirSync, existsSync } from 'fs';
 import { join } from 'path';
 import { OIS } from '@api3/ois';
-import { createConfig } from './create-config';
-import { createHardhatConfig, createRequester} from './create-contract';
+import { createConfig } from './utils/create-config';
+import { createHardhatConfig, createRequester} from './utils/create-contract';
 import { v4 as uuidv4 } from 'uuid';
 import { ethers } from 'ethers';
 import Web3 from 'web3';
@@ -81,6 +81,7 @@ export async function generateRequester(jobId: string, airnodeAddress: string, r
     // generate contract
     let requesterContract = await createRequester(airnodeAddress, sponsor, sponsorWallet, requesterName);
     writeFileSync(join('workspace', jobId, `contracts/${requesterName}.sol`), requesterContract);
+    console.log(requesterContract);
 
     // generate hardhat config
     let hardhatCfg = await createHardhatConfig(network, provider, sponsorMnemonic);
