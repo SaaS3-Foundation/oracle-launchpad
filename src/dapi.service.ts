@@ -5,6 +5,8 @@ import { existsSync, mkdirSync } from 'fs';
 import { interval, map, Observable } from 'rxjs';
 import { EventsGateway } from './events.gateway';
 import * as composer from './oracle.composer';
+import { DapiRepository} from './model/dapi/dapi.respository';
+import { createDemoContract } from './utils/create-contract';
 
 enum JobStatus {
   PENDING = 0, // 0%
@@ -42,7 +44,8 @@ function workspace(dir: string) {
 
 @Injectable()
 export class DapiService {
-  public constructor(private readonly ws: EventsGateway) {
+  public constructor(private readonly ws: EventsGateway,
+    private readonly dapiRepository: DapiRepository) {
   }
 
 
@@ -55,12 +58,35 @@ export class DapiService {
     return { sponsor: sponsor, requester: requester };
   }
 
+  check(ois: any): boolean {
+    if (ois['title'] == undefined || ois['title'] == '') {
+      return false;
+    }
+    if (ois['creator'] == undefined || ois['creator'].length == 0) {
+      return false;
+    }
+    if (ois['description'] == undefined || ois['description'] == '') {
+      return false;
+    }
+    return true;
+  }
+
   async submit(ois: any, jobId: string) {
     this.emit(jobId, JobStatus.PENDING);
 
-    // TODO: save input to database
-
     console.log("================", jobId, "================");
+    let entity = {
+      id: jobId,
+      title: ois['title'],
+      creator: ois['creator'],
+      description: ois['description'],
+      status: JobStatus.PENDING,
+      tags: ois['tags'],
+      demo: null,
+      requester: null,
+      create_at: new Date(),
+      update_at: new Date(),
+    };
     workspace(jobId);
     console.log(ois);
 
@@ -77,12 +103,18 @@ export class DapiService {
 
 
     this.emit(jobId, JobStatus.GENERATING_REQUESTER_CONTRACT);
-    await composer.generateRequester(jobId, address, requesterName);
+    let requesterContract = await composer.generateRequester(jobId, address, requesterName);
+    entity.requester = requesterContract;
 
     // DEPLOYING_REQUESTER_CONTRACT
     //this.emit(jobId, JobStatus.DEPLOYING_REQUESTER_CONTRACT);
     //let requester = await composer.deployRequester(jobId, requesterName);
     //console.log(`Requester contract deployed, and requester is ${requester}`);
+
+    const requester = { address: "xxx"};
+
+    // genreate demo contract
+    entity.demo = await createDemoContract(requesterName, requester.address);
 
     // SPONOR_REQUESTER_CONTRACT
     //this.emit(jobId, JobStatus.SPONSORING_REQUESTER_CONTRACT);
@@ -102,6 +134,9 @@ export class DapiService {
     // await composer.deployAirnode(jobId);
 
     this.emit(jobId, JobStatus.DONE);
+    entity.update_at = new Date();
+    entity.status = JobStatus.DONE;
+    this.dapiRepository.save(entity);
     console.log("================", 'END', "================");
   }
 }

@@ -17,6 +17,9 @@ export class DapiController {
         // validate ois
         // if ok
         const jobId = nanoid(10);
+        if (!this.dapiService.check(ois)) {
+            return res.status(HttpStatus.BAD_REQUEST).json({ "msg": "Invalid input", "code": 400 });
+        }
         res.json({ "msg": "OK", code: 200, "job": jobId });
         this.dapiService.submit(ois, jobId);
     }
@@ -33,7 +36,7 @@ export class DapiController {
 
     @Get("/list")
     async list(@Query('page') page: number, @Query("size") size: number, @Response() res) {
-        if (size < 1 || page < 1) {
+        if ((size === undefined || size < 1) || (page === undefined || page < 1)) {
             this.dapiRepository.findAll().then(ret => {
                 res.json({ "msg": "OK", "code": 200, "data": ret });
             });
@@ -42,5 +45,17 @@ export class DapiController {
                 res.json({ "msg": "OK", "code": 200, "data": ret });
             });
         }
+    }
+
+    @Get("/detail")
+    async detail(@Query('id') id: string, @Response() res) {
+        if (id === undefined) {
+            return res.json({ "msg": "Invalid input", "code": 400 });
+        }
+        let entity = await this.dapiRepository.find(id);
+        if (entity == null) {
+            return res.status(HttpStatus.NOT_FOUND).json({ "msg": "Not Found", "code": 404 });
+        }
+        return res.json({ "msg": "OK", "code": 200, "data": entity });
     }
 }

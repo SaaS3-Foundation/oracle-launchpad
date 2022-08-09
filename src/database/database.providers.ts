@@ -10,12 +10,12 @@ export const databaseProviders = [
       const dataSource = new DataSource({
         type: 'postgres',
         host: configService.get('POSTGRES_HOST'),
-        port: 3306,
-        username: 'root',
-        password: 'root',
-        database: 'test',
+        port: configService.get('POSTGRES_PORT'),
+        username: configService.get('POSTGRES_USER'),
+        password: configService.get('POSTGRES_PASSWORD'),
+        database: configService.get('POSTGRES_DATABASE'),
         entities: [
-            __dirname + '/model/*.entity{.ts,.js}',
+            __dirname + '/../**/*.entity{.ts,.js}',
         ],
         synchronize: true,
       });

@@ -90,3 +90,35 @@ main().catch((error) => {
   process.exitCode = 1;
 });`;
 }
+
+
+export async function createDemoContract(requesterName: string, requesterAddress: string) { 
+    return `//SPDX-License-Identifier: MIT
+// This demo contract is generated automatically by saas3
+// EDIT it to adapt to your own dAPI
+pragma solidity 0.8.9;
+import "@api3/airnode-protocol/contracts/rrp/requesters/RrpRequesterV0.sol";
+
+contract Hello  {
+    // define your response data here
+    /// int256 public fulfilledData;
+
+    function call_dapi(
+        bytes32 endpointId,
+        bytes calldata parameters
+    ) external {
+        ${requesterName} c = ${requesterName}(${requesterAddress});
+        c.makeRequest(
+            endpointId,
+            address(this), 
+            this.callback.selector, 
+            parameters);
+    }
+
+    function callback(bytes32 requestId, bytes calldata data) public {
+        // decode the data here
+        /// decodedData = abi.decode(data, (int256));
+        /// any other you want to do
+    }
+}`
+}

@@ -37,4 +37,3 @@ lerna-debug.log*
 aws.env
 workspace
 cache
-.env

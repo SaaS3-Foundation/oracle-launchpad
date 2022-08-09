@@ -92,6 +92,7 @@ export async function generateRequester(jobId: string, airnodeAddress: string, r
     let cmd = `cd workspace/${jobId} && npx hardhat compile`;
     console.log(cmd);
     execSync(cmd)
+    return requesterContract;
 }
 
 export async function deployWithWeb3(abi: any, bytecode: any) {
