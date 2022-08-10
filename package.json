@@ -1,9 +1,9 @@
 {
-  "name": "airnode-composer",
+  "name": "@saas3/oracle-composer",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
-  "private": true,
+  "description": "dAPI web tool backend and contracts",
+  "author": "Tianyi Song <tianyi@saas3.io>",
+  "private": false,
   "license": "UNLICENSED",
   "scripts": {
     "prebuild": "rimraf dist",
