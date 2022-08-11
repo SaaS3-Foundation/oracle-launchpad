@@ -124,13 +124,13 @@ export class DapiService {
     entity.demo = await createDemoContract(jobId, requesterName, requester.address);
 
     // SPONOR_REQUESTER_CONTRACT
-    this.emit(jobId, JobStatus.SPONSORING_REQUESTER_CONTRACT);
-    await composer.sponsorRequester(requester.address);
+    //this.emit(jobId, JobStatus.SPONSORING_REQUESTER_CONTRACT);
+    //await composer.sponsorRequester(requester.address);
 
     // DEPLOYING_AIRNODE_TO_AWS
     this.emit(jobId, JobStatus.DEPLOYING_AIRNODE)
 
-    await composer.deployAirnode(jobId);
+    //await composer.deployAirnode(jobId);
 
     this.emit(jobId, JobStatus.DONE);
     entity.update_at = new Date();
