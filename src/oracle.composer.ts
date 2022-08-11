@@ -161,6 +161,7 @@ export async function generateConfig(jobId: string, o: any) {
     console.log(config);
 
     writeFileSync(join('workspace', jobId, 'config', 'config.json'), JSON.stringify(config, null, 2) + '\n');
+    return config;
 }
 
 export async function generateSecrets(jobId: string, mnemonic: string) {
