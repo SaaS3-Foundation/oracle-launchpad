@@ -1,0 +1,135 @@
+{
+  "chains": [
+    {
+      "maxConcurrency": 100,
+      "authorizers": [],
+      "contracts": {
+        "AirnodeRrp": "0xa0AD79D995DdeeB18a14eAef56A549A04e3Aa1Bd"
+      },
+      "id": "1287",
+      "providers": {
+        "saas3": {
+          "url": "${CHAIN_PROVIDER_URL}"
+        }
+      },
+      "type": "evm",
+      "options": {
+        "txType": "eip1559",
+        "fulfillmentGasLimit": 500000
+      }
+    }
+  ],
+  "nodeSettings": {
+    "cloudProvider": {
+      "type": "local"
+    },
+    "airnodeWalletMnemonic": "${AIRNODE_WALLET_MNEMONIC}",
+    "heartbeat": {
+      "enabled": false
+    },
+    "httpGateway": {
+      "enabled": true,
+      "apiKey": "${HTTP_GATEWAY_API_KEY}",
+      "maxConcurrency": 10
+    },
+    "httpSignedDataGateway": {
+      "enabled": false
+    },
+    "logFormat": "plain",
+    "logLevel": "DEBUG",
+    "nodeVersion": "0.7.2",
+    "stage": "dev"
+  },
+  "triggers": {
+    "rrp": [
+      {
+        "endpointId": "0xf31329a4857a206ba8ce081699226a06271e90c5362a87026741ba717dc4fbc5",
+        "oisTitle": "CoinGecko Coin Price",
+        "endpointName": "coinMarketData"
+      }
+    ],
+    "http": [
+      {
+        "endpointId": "0xf31329a4857a206ba8ce081699226a06271e90c5362a87026741ba717dc4fbc5",
+        "oisTitle": "CoinGecko Coin Price",
+        "endpointName": "coinMarketData"
+      }
+    ],
+    "httpSignedData": []
+  },
+  "templates": [],
+  "ois": [
+    {
+      "oisFormat": "1.0.0",
+      "title": "CoinGecko Coin Price",
+      "version": "1.0.0",
+      "apiSpecifications": {
+        "servers": [
+          {
+            "url": "https://api.coingecko.com/api/v3"
+          }
+        ],
+        "paths": {
+          "/simple/price": {
+            "get": {
+              "parameters": [
+                {
+                  "in": "query",
+                  "name": "ids"
+                },
+                {
+                  "in": "query",
+                  "name": "vs_currencies"
+                }
+              ]
+            }
+          }
+        },
+        "components": {
+          "securitySchemes": {}
+        },
+        "security": {}
+      },
+      "endpoints": [
+        {
+          "name": "coinMarketData",
+          "operation": {
+            "method": "get",
+            "path": "/simple/price"
+          },
+          "fixedOperationParameters": [],
+          "reservedParameters": [
+            {
+              "name": "_type",
+              "fixed": "int256"
+            },
+            {
+              "name": "_path"
+            },
+            {
+              "name": "_times",
+              "fixed": "1000000"
+            }
+          ],
+          "parameters": [
+            {
+              "name": "coinIds",
+              "operationParameter": {
+                "in": "query",
+                "name": "ids"
+              }
+            },
+            {
+              "name": "coinVs_currencies",
+              "operationParameter": {
+                "in": "query",
+                "name": "vs_currencies"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "apiCredentials": []
+}
