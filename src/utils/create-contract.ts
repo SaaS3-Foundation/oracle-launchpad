@@ -92,12 +92,12 @@ main().catch((error) => {
 }
 
 
-export async function createDemoContract(requesterName: string, requesterAddress: string) { 
+export async function createDemoContract(jobId: string, requesterName: string, requesterAddress: string) { 
     return `//SPDX-License-Identifier: MIT
 // This demo contract is generated automatically by saas3
 // EDIT it to adapt to your own dAPI
 pragma solidity 0.8.9;
-import "@api3/airnode-protocol/contracts/rrp/requesters/RrpRequesterV0.sol";
+import "@saas3/oracle-composer/workspace/${jobId}/contracts/${requesterName}.sol";
 
 contract Hello  {
     // define your response data here

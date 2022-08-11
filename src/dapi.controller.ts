@@ -4,7 +4,7 @@ import { OIS } from '@api3/ois';
 import { nanoid } from 'nanoid';
 import { interval, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { DapiRepository} from './model/dapi/dapi.respository';
+import { DapiRepository } from './model/dapi/dapi.respository';
 
 
 @Controller('/saas3/dapi')

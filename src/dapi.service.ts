@@ -114,7 +114,7 @@ export class DapiService {
     const requester = { address: "xxx"};
 
     // genreate demo contract
-    entity.demo = await createDemoContract(requesterName, requester.address);
+    entity.demo = await createDemoContract(jobId, requesterName, requester.address);
 
     // SPONOR_REQUESTER_CONTRACT
     //this.emit(jobId, JobStatus.SPONSORING_REQUESTER_CONTRACT);
