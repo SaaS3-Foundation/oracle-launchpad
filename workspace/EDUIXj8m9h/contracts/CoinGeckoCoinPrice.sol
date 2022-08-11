@@ -3,7 +3,7 @@ pragma solidity 0.8.9;
 
 import "@api3/airnode-protocol/contracts/rrp/requesters/RrpRequesterV0.sol";
 
-contract CoinGeckoBasicRequest is RrpRequesterV0 {
+contract CoinGeckoCoinPrice is RrpRequesterV0 {
     mapping(bytes32 => bool) public incomingFulfillments;
     mapping(bytes32 => address) callbacks;
     mapping(bytes32 => bytes4) callbacksFn;

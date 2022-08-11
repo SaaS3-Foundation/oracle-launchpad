@@ -1,0 +1,137 @@
+{
+  "chains": [
+    {
+      "maxConcurrency": 100,
+      "authorizers": [],
+      "contracts": {
+        "AirnodeRrp": "0xa0AD79D995DdeeB18a14eAef56A549A04e3Aa1Bd"
+      },
+      "id": "1287",
+      "providers": {
+        "saas3": {
+          "url": "${CHAIN_PROVIDER_URL}"
+        }
+      },
+      "type": "evm",
+      "options": {
+        "txType": "eip1559",
+        "fulfillmentGasLimit": 500000
+      }
+    }
+  ],
+  "nodeSettings": {
+    "cloudProvider": {
+      "type": "aws",
+      "region": "us-east-1",
+      "disableConcurrencyReservations": true
+    },
+    "airnodeWalletMnemonic": "${AIRNODE_WALLET_MNEMONIC}",
+    "heartbeat": {
+      "enabled": false
+    },
+    "httpGateway": {
+      "enabled": true,
+      "apiKey": "${HTTP_GATEWAY_API_KEY}",
+      "maxConcurrency": 10
+    },
+    "httpSignedDataGateway": {
+      "enabled": false
+    },
+    "logFormat": "plain",
+    "logLevel": "DEBUG",
+    "nodeVersion": "0.7.2",
+    "stage": "dev"
+  },
+  "triggers": {
+    "rrp": [
+      {
+        "endpointId": "0xc5a7b301a42c4964b4955edcf1a4a9da595eb96977c4712f466367c5a9c83100",
+        "oisTitle": "CoinMarketCap Coin Price",
+        "endpointName": "coinMarketData"
+      }
+    ],
+    "http": [
+      {
+        "endpointId": "0xc5a7b301a42c4964b4955edcf1a4a9da595eb96977c4712f466367c5a9c83100",
+        "oisTitle": "CoinMarketCap Coin Price",
+        "endpointName": "coinMarketData"
+      }
+    ],
+    "httpSignedData": []
+  },
+  "templates": [],
+  "ois": [
+    {
+      "oisFormat": "1.0.0",
+      "title": "CoinMarketCap Coin Price",
+      "version": "1.0.0",
+      "apiSpecifications": {
+        "servers": [
+          {
+            "url": "https://pro-api.coinmarketcap.com/v1"
+          }
+        ],
+        "paths": {
+          "/cryptocurrency/quotes/latest": {
+            "get": {
+              "parameters": [
+                {
+                  "in": "query",
+                  "name": "slug"
+                },
+                {
+                  "in": "query",
+                  "name": "convert"
+                }
+              ]
+            }
+          }
+        },
+        "components": {
+          "securitySchemes": {}
+        },
+        "security": {}
+      },
+      "endpoints": [
+        {
+          "name": "coinMarketData",
+          "operation": {
+            "method": "get",
+            "path": "/cryptocurrency/quotes/latest"
+          },
+          "fixedOperationParameters": [],
+          "reservedParameters": [
+            {
+              "name": "_type",
+              "fixed": "int256"
+            },
+            {
+              "name": "_path"
+            },
+            {
+              "name": "_times",
+              "fixed": "1000000"
+            }
+          ],
+          "parameters": [
+            {
+              "name": "slug",
+              "operationParameter": {
+                "in": "query",
+                "name": "slug"
+              }
+            },
+            {
+              "name": "convert",
+              "operationParameter": {
+                "in": "query",
+                "name": "convert"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "apiCredentials": []
+}

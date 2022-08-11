@@ -37,8 +37,9 @@ lerna-debug.log*
 aws.env
 .env.prod
 workspace/*/artifacts
-workspace/*/config
+workspace/*/config/secrets.env
 workspace/*/cache
+workspace/*/output
 workspace/*/hardhat.config.ts
 cache
 nohup.out

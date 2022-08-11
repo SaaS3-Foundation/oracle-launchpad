@@ -5,7 +5,7 @@ import { existsSync, mkdirSync } from 'fs';
 import { interval, map, Observable } from 'rxjs';
 import { EventsGateway } from './events.gateway';
 import * as composer from './oracle.composer';
-import { DapiRepository} from './model/dapi/dapi.respository';
+import { DapiRepository } from './model/dapi/dapi.respository';
 import { createDemoContract } from './utils/create-contract';
 
 enum JobStatus {
@@ -50,7 +50,7 @@ export class DapiService {
 
 
   emit(jobId: string, s: JobStatus) {
-  this.ws.server.emit('status', { jobId: jobId, status: JobStatus[s], progress: s*10});
+    this.ws.server.emit('status', { jobId: jobId, status: JobStatus[s], progress: s * 10 });
   }
 
   async acquire(requester: string) {
@@ -84,6 +84,7 @@ export class DapiService {
       tags: ois['tags'],
       demo: null,
       requester: null,
+      triggers: null,
       create_at: new Date(),
       update_at: new Date(),
     };
@@ -101,37 +102,35 @@ export class DapiService {
     console.log('Airnode mnemonic:', mnemonic);
     console.log('Airnode address:', address);
 
+    // GENERATE_AIRNODE_CONFIG
+    this.emit(jobId, JobStatus.GENERATING_AIRNODE_CONFIG)
+    let config = await composer.generateConfig(jobId, ois);
+    entity.triggers = JSON.stringify(config.triggers);
+
+    // GENERATE_AIRNODE_SECRET
+    this.emit(jobId, JobStatus.GENERATING_AIRNODE_SECRET);
+    await composer.generateSecrets(jobId, mnemonic);
 
     this.emit(jobId, JobStatus.GENERATING_REQUESTER_CONTRACT);
     let requesterContract = await composer.generateRequester(jobId, address, requesterName);
     entity.requester = requesterContract;
 
     // DEPLOYING_REQUESTER_CONTRACT
-    //this.emit(jobId, JobStatus.DEPLOYING_REQUESTER_CONTRACT);
-    //let requester = await composer.deployRequester(jobId, requesterName);
-    //console.log(`Requester contract deployed, and requester is ${requester}`);
-
-    const requester = { address: "xxx"};
+    this.emit(jobId, JobStatus.DEPLOYING_REQUESTER_CONTRACT);
+    let requester = await composer.deployRequester(jobId, requesterName);
+    console.log(`Requester contract deployed, and requester is ${requester}`);
 
     // genreate demo contract
     entity.demo = await createDemoContract(jobId, requesterName, requester.address);
 
     // SPONOR_REQUESTER_CONTRACT
-    //this.emit(jobId, JobStatus.SPONSORING_REQUESTER_CONTRACT);
-    //await composer.sponsorRequester(requester.address);
-
-    // GENERATE_AIRNODE_CONFIG
-    this.emit(jobId, JobStatus.GENERATING_AIRNODE_CONFIG)
-    await composer.generateConfig(jobId, ois);
-
-    // GENERATE_AIRNODE_SECRET
-    this.emit(jobId, JobStatus.GENERATING_AIRNODE_SECRET);
-    await composer.generateSecrets(jobId, mnemonic);
+    this.emit(jobId, JobStatus.SPONSORING_REQUESTER_CONTRACT);
+    await composer.sponsorRequester(requester.address);
 
     // DEPLOYING_AIRNODE_TO_AWS
     this.emit(jobId, JobStatus.DEPLOYING_AIRNODE)
 
-    // await composer.deployAirnode(jobId);
+    await composer.deployAirnode(jobId);
 
     this.emit(jobId, JobStatus.DONE);
     entity.update_at = new Date();

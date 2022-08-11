@@ -26,6 +26,9 @@ export class DapiEntity {
     @Column({ type: 'numeric'})
     status: number;
 
+    @Column({ type: 'text', nullable: true })
+    triggers: string;
+
     @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     create_at: Date;
 
