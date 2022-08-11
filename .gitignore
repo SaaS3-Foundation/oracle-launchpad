@@ -35,8 +35,10 @@ lerna-debug.log*
 !.vscode/extensions.json
 
 aws.env
+.env.prod
 workspace/*/artifacts
 workspace/*/config
 workspace/*/cache
 workspace/*/hardhat.config.ts
 cache
+nohup.out
