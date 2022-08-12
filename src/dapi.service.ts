@@ -7,6 +7,7 @@ import { EventsGateway } from './events.gateway';
 import * as composer from './oracle.composer';
 import { DapiRepository } from './model/dapi/dapi.respository';
 import { createDemoContract } from './utils/create-contract';
+import { ConfigService, ConfigModule } from '@nestjs/config';
 
 enum JobStatus {
   PENDING = 0, // 0%
@@ -21,36 +22,40 @@ enum JobStatus {
   DONE, // 100%
 }
 
-
 function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function workspace(dir: string) {
   let cfg = 'workspace/' + dir + '/config';
   if (!existsSync(cfg)) {
     mkdirSync(cfg, {
-      recursive: true
+      recursive: true,
     });
   }
 
   let c = 'workspace/' + dir + '/contracts';
   if (!existsSync(c)) {
     mkdirSync(c, {
-      recursive: true
+      recursive: true,
     });
   }
 }
 
 @Injectable()
 export class DapiService {
-  public constructor(private readonly ws: EventsGateway,
-    private readonly dapiRepository: DapiRepository) {
-  }
-
+  public constructor(
+    private readonly ws: EventsGateway,
+    private readonly dapiRepository: DapiRepository,
+    private readonly configService: ConfigService,
+  ) {}
 
   emit(jobId: string, s: JobStatus) {
-    this.ws.server.emit('status', { jobId: jobId, status: JobStatus[s], progress: s * 10 });
+    this.ws.server.emit('status', {
+      jobId: jobId,
+      status: JobStatus[s],
+      progress: s * 10,
+    });
   }
 
   async acquire(requester: string) {
@@ -74,7 +79,7 @@ export class DapiService {
   async submit(ois: any, jobId: string) {
     this.emit(jobId, JobStatus.PENDING);
 
-    console.log("================", jobId, "================");
+    console.log('================', jobId, '================');
     let entity = {
       id: jobId,
       title: ois['title'],
@@ -84,58 +89,100 @@ export class DapiService {
       tags: ois['tags'],
       demo: null,
       requester: null,
+      requesterAddress: null,
       triggers: null,
       create_at: new Date(),
       update_at: new Date(),
     };
+
+    delete ois['creator'];
+    delete ois['description'];
+    delete ois['tags'];
+
     workspace(jobId);
     console.log(ois);
 
     let requesterName = ois['title'].replace(/\s/g, '');
     console.log('RequseterName', requesterName);
 
-
     // GENERATING_AIRNODE_ADDRESS
     this.emit(jobId, JobStatus.GENERATING_AIRNODE_ADDRESS);
     // const [mnemonic, address] = await composer.generateAirnodeAddress();
-    const [mnemonic, address] = ["taxi balance fine alert urban trip forum student question job hazard devote", "0x2156217a193B4bC6c3c24012611D124310663060"];
+    const [mnemonic, address] = [
+      'taxi balance fine alert urban trip forum student question job hazard devote',
+      '0x2156217a193B4bC6c3c24012611D124310663060',
+    ];
     console.log('Airnode mnemonic:', mnemonic);
     console.log('Airnode address:', address);
 
     // GENERATE_AIRNODE_CONFIG
-    this.emit(jobId, JobStatus.GENERATING_AIRNODE_CONFIG)
+    let apiKey = '';
+    if (
+      Object.entries(ois['apiSpecifications']['components']['securitySchemes'])
+        .length > 0
+    ) {
+      apiKey =
+        ois['apiSpecifications']['components']['securitySchemes']['1']['value'];
+      delete ois['apiSpecifications']['components']['securitySchemes']['1'][
+        'value'
+      ];
+    }
+    this.emit(jobId, JobStatus.GENERATING_AIRNODE_CONFIG);
     let config = await composer.generateConfig(jobId, ois);
     entity.triggers = JSON.stringify(config.triggers);
 
     // GENERATE_AIRNODE_SECRET
     this.emit(jobId, JobStatus.GENERATING_AIRNODE_SECRET);
-    await composer.generateSecrets(jobId, mnemonic);
+    await composer.generateSecrets(jobId, mnemonic, apiKey);
 
     this.emit(jobId, JobStatus.GENERATING_REQUESTER_CONTRACT);
-    let requesterContract = await composer.generateRequester(jobId, address, requesterName);
+    let requesterContract = await composer.generateRequester(
+      jobId,
+      address,
+      requesterName,
+    );
     entity.requester = requesterContract;
+
+    if (this.configService.get('NO_DEPLOY_AND_SPONSOR')) {
+      this.emit(jobId, JobStatus.DONE);
+      entity.update_at = new Date();
+      entity.status = JobStatus.DONE;
+      this.dapiRepository.save(entity);
+      console.log('================', 'END', '================');
+      return;
+    }
 
     // DEPLOYING_REQUESTER_CONTRACT
     this.emit(jobId, JobStatus.DEPLOYING_REQUESTER_CONTRACT);
     let requester = await composer.deployRequester(jobId, requesterName);
     console.log(`Requester contract deployed, and requester is ${requester}`);
+    entity.requesterAddress = requester.address;
 
     // genreate demo contract
-    entity.demo = await createDemoContract(jobId, requesterName, requester.address);
+    entity.demo = await createDemoContract(
+      jobId,
+      requesterName,
+      requester.address,
+    );
+    console.log('demo contract\n', entity.demo);
 
     // SPONOR_REQUESTER_CONTRACT
-    //this.emit(jobId, JobStatus.SPONSORING_REQUESTER_CONTRACT);
-    //await composer.sponsorRequester(requester.address);
+    this.emit(jobId, JobStatus.SPONSORING_REQUESTER_CONTRACT);
+    await composer.sponsorRequester(requester.address);
 
     // DEPLOYING_AIRNODE_TO_AWS
-    this.emit(jobId, JobStatus.DEPLOYING_AIRNODE)
+    this.emit(jobId, JobStatus.DEPLOYING_AIRNODE);
 
-    //await composer.deployAirnode(jobId);
+    if (this.configService.get('LOCAL')) {
+      await composer.deployAirnodeLocal(jobId);
+    } else {
+      await composer.deployAirnode(jobId);
+    }
 
     this.emit(jobId, JobStatus.DONE);
     entity.update_at = new Date();
     entity.status = JobStatus.DONE;
     this.dapiRepository.save(entity);
-    console.log("================", 'END', "================");
+    console.log('================', 'END', '================');
   }
 }

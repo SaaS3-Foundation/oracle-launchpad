@@ -5,10 +5,7 @@ import { DapiRepository } from './dapi.respository';
 
 @Module({
   imports: [DatabaseModule],
-  providers: [
-    ...dapiProviders,
-    DapiRepository,
-  ],
+  providers: [...dapiProviders, DapiRepository],
   exports: [DapiRepository],
 })
 export class DapiModule {}
