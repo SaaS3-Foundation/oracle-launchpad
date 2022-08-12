@@ -1,7 +1,10 @@
-
-
-export async function createRequester(airnodeAddress: string, sponsor: string, sponsorWallet: string, requesterName: string) {
-    return `//SPDX-License-Identifier: MIT
+export async function createRequester(
+  airnodeAddress: string,
+  sponsor: string,
+  sponsorWallet: string,
+  requesterName: string,
+) {
+  return `//SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
 import "@api3/airnode-protocol/contracts/rrp/requesters/RrpRequesterV0.sol";
@@ -46,9 +49,12 @@ contract ${requesterName} is RrpRequesterV0 {
 }`;
 }
 
-
-export async function createHardhatConfig(network: string, provider: string, mnemonic: string) {
-    return `import { HardhatUserConfig } from 'hardhat/types';
+export async function createHardhatConfig(
+  network: string,
+  provider: string,
+  mnemonic: string,
+) {
+  return `import { HardhatUserConfig } from 'hardhat/types';
     import '@nomiclabs/hardhat-waffle';
     import '@nomiclabs/hardhat-ethers';
     
@@ -66,11 +72,14 @@ export async function createHardhatConfig(network: string, provider: string, mne
     };
     
     export default config;
-    `
+    `;
 }
 
-export async function createDeployScript(requesterName: string, airnodeRrp: string) { 
-    return `import { ethers } from "hardhat";
+export async function createDeployScript(
+  requesterName: string,
+  airnodeRrp: string,
+) {
+  return `import { ethers } from "hardhat";
 
 async function main() {
 
@@ -91,9 +100,12 @@ main().catch((error) => {
 });`;
 }
 
-
-export async function createDemoContract(jobId: string, requesterName: string, requesterAddress: string) { 
-    return `//SPDX-License-Identifier: MIT
+export async function createDemoContract(
+  jobId: string,
+  requesterName: string,
+  requesterAddress: string,
+) {
+  return `//SPDX-License-Identifier: MIT
 // This demo contract is generated automatically by saas3
 // EDIT it to adapt to your own dAPI
 pragma solidity 0.8.9;
@@ -120,5 +132,5 @@ contract Hello  {
         /// decodedData = abi.decode(data, (int256));
         /// any other you want to do
     }
-}`
+}`;
 }

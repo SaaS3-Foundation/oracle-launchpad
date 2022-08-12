@@ -11,7 +11,7 @@ import envConfig from './env';
     DapiModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [envConfig.path]
+      envFilePath: [envConfig.path],
     }),
   ],
   controllers: [DapiController],

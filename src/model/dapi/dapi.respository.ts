@@ -12,7 +12,8 @@ export class DapiRepository {
   ) {}
 
   async page(index: number, size: number): Promise<any> {
-    let data = await this.dataSource.getRepository(DapiEntity)
+    let data = await this.dataSource
+      .getRepository(DapiEntity)
       .createQueryBuilder('dapi')
       .where({ status: 9 })
       .orderBy('dapi.create_at', 'DESC')
@@ -20,10 +21,11 @@ export class DapiRepository {
       .skip((index - 1) * size)
       .getMany();
 
-    let count = await this.dataSource.getRepository(DapiEntity)
-    .createQueryBuilder('dapi')
-    .where({ status: 9 })
-    .getCount();
+    let count = await this.dataSource
+      .getRepository(DapiEntity)
+      .createQueryBuilder('dapi')
+      .where({ status: 9 })
+      .getCount();
 
     return {
       size: size,
@@ -44,9 +46,11 @@ export class DapiRepository {
   }
 
   async find(id: string): Promise<DapiEntity> {
-    return this.dataSource.getRepository(DapiEntity)
-    .createQueryBuilder('dapi')
-    .where({ id: id }).getOne();
+    return this.dataSource
+      .getRepository(DapiEntity)
+      .createQueryBuilder('dapi')
+      .where({ id: id })
+      .getOne();
   }
 
   async save(entity: DapiEntity): Promise<DapiEntity> {
@@ -54,11 +58,17 @@ export class DapiRepository {
   }
 
   async updateStatus(id: string, status: number) {
-    let res = await this.dataSource.getRepository(DapiEntity).update({ id: id }, { status: status });
+    let res = await this.dataSource
+      .getRepository(DapiEntity)
+      .update({ id: id }, { status: status });
     if (res.affected) {
-      console.log("update status success");
-    }else{
-      console.log("update status failed");
+      console.log('update status success');
+    } else {
+      console.log('update status failed');
     }
+  }
+
+  async deleteById(id: string) {
+    return this.repo.delete({ id: id });
   }
 }
