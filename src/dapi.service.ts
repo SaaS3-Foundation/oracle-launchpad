@@ -143,6 +143,15 @@ export class DapiService {
     );
     entity.requester = requesterContract;
 
+    if (this.configService.get('NO_DEPLOY_AND_SPONSOR')) {
+      this.emit(jobId, JobStatus.DONE);
+      entity.update_at = new Date();
+      entity.status = JobStatus.DONE;
+      this.dapiRepository.save(entity);
+      console.log('================', 'END', '================');
+      return;
+    }
+
     // DEPLOYING_REQUESTER_CONTRACT
     this.emit(jobId, JobStatus.DEPLOYING_REQUESTER_CONTRACT);
     let requester = await composer.deployRequester(jobId, requesterName);
