@@ -42,3 +42,4 @@ workspace/*/cache
 workspace/*/output
 workspace/*/hardhat.config.ts
 cache
+nohup.out
