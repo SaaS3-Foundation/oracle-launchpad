@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Query,
   Delete,
+  Patch,
 } from '@nestjs/common';
 import { DapiService } from './dapi.service';
 import { OIS } from '@api3/ois';
@@ -88,6 +89,27 @@ export class DapiController {
     await this.dapiRepository.deleteById(id);
     return res.json({ msg: 'OK', code: 200 });
   }
+  @Patch('/update')
+  async update(@Query('id') id: string, @Body() u: any, @Response() res) {
+    if (id === undefined) {
+      return res.json({ msg: 'id not defined', code: 400 });
+    }
+    let entity = await this.dapiRepository.find(id);
+    if (entity == null) {
+      return res
+        .status(HttpStatus.NOT_FOUND)
+        .json({ msg: `entity ${id} not Found`, code: 404 });
+    }
+    if (u['description'] !== undefined) {
+      entity.description = u['description'];
+    }
+    if (u['demo'] !== undefined) {
+      entity.demo = u['demo'];
+    }
+    entity.update_at = new Date();
+    await this.dapiRepository.update(entity);
+    res.json({ msg: 'OK', code: 200 });
+  }
 
   @Get('/detail')
   async detail(@Query('id') id: string, @Response() res) {
@@ -98,7 +120,7 @@ export class DapiController {
     if (entity == null) {
       return res
         .status(HttpStatus.NOT_FOUND)
-        .json({ msg: 'Not Found', code: 404 });
+        .json({ msg: `entity ${id} not Found`, code: 404 });
     }
     return res.json({ msg: 'OK', code: 200, data: entity });
   }

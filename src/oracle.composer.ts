@@ -238,9 +238,9 @@ export async function deployAirnode(jobId: string) {
     -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) \
     -v "$(pwd)/config:/app/config" \
     -v "$(pwd)/output:/app/output" \
-    api3/airnode-deployer:0.7.2 deploy`;
+    api3/airnode-deployer:songtianyi deploy`;
   console.log('deploy cmd:', cmd);
-  //execSync(cmd)
+  execSync(cmd);
 }
 
 export async function deployAirnodeLocal(jobId: string) {

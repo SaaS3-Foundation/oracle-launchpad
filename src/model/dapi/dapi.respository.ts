@@ -53,6 +53,10 @@ export class DapiRepository {
       .getOne();
   }
 
+  async update(entity: any): Promise<any> {
+    return this.repo.update({ id: entity.id }, entity);
+  }
+
   async save(entity: DapiEntity): Promise<DapiEntity> {
     return this.repo.save(entity);
   }
