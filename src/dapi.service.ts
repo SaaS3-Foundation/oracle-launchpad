@@ -11,13 +11,13 @@ import { ConfigService, ConfigModule } from '@nestjs/config';
 
 enum JobStatus {
   PENDING = 0, // 0%
-  GENERATING_REQUESTER_CONTRACT, // 30s, 0-4%
-  DEPLOYING_REQUESTER_CONTRACT, // 2min, 4-20%
-  GENERATING_AIRNODE_ADDRESS, // 30s, 20 - 24%
-  SPONSORING_REQUESTER_CONTRACT, // 30s, 24 - 28%
-  GENERATING_AIRNODE_CONFIG, // 30s, 28 - 32%
-  GENERATING_AIRNODE_SECRET, // 30s, 32 - 26%
-  DEPLOYING_AIRNODE, // 36 - 99%, 10 min
+  GENERATING_DAPI_ADDRESS,
+  GENERATING_DAPI_CONFIG,
+  GENERATING_DAPI_SECRET,
+  GENERATING_DAPI_CONTRACT,
+  DEPLOYING_DAPI_CONTRACT,
+  SPONSORING_DAPI_CONTRACT,
+  DEPLOYING_DAPI,
   ERROR,
   DONE, // 100%
 }
@@ -105,17 +105,17 @@ export class DapiService {
     let requesterName = ois['title'].replace(/\s/g, '');
     console.log('RequseterName', requesterName);
 
-    // GENERATING_AIRNODE_ADDRESS
-    this.emit(jobId, JobStatus.GENERATING_AIRNODE_ADDRESS);
-    // const [mnemonic, address] = await composer.generateAirnodeAddress();
+    // GENERATING_DAPI_ADDRESS
+    this.emit(jobId, JobStatus.GENERATING_DAPI_ADDRESS);
+    // const [mnemonic, address] = await composer.generateDapiAddress();
     const [mnemonic, address] = [
       'taxi balance fine alert urban trip forum student question job hazard devote',
       '0x2156217a193B4bC6c3c24012611D124310663060',
     ];
-    console.log('Airnode mnemonic:', mnemonic);
-    console.log('Airnode address:', address);
+    console.log('DAPI mnemonic:', mnemonic);
+    console.log('DAPI address:', address);
 
-    // GENERATE_AIRNODE_CONFIG
+    // GENERATE_DAPI_CONFIG
     let apiKey = '';
     if (
       Object.entries(ois['apiSpecifications']['components']['securitySchemes'])
@@ -127,15 +127,20 @@ export class DapiService {
         'value'
       ];
     }
-    this.emit(jobId, JobStatus.GENERATING_AIRNODE_CONFIG);
-    let config = await composer.generateConfig(jobId, ois);
+    this.emit(jobId, JobStatus.GENERATING_DAPI_CONFIG);
+    console.log(this.configService.get('LOCAL'));
+    let config = await composer.generateConfig(
+      jobId,
+      ois,
+      this.configService.get('LOCAL'),
+    );
     entity.triggers = JSON.stringify(config.triggers);
 
     // GENERATE_AIRNODE_SECRET
-    this.emit(jobId, JobStatus.GENERATING_AIRNODE_SECRET);
+    this.emit(jobId, JobStatus.GENERATING_DAPI_SECRET);
     await composer.generateSecrets(jobId, mnemonic, apiKey);
 
-    this.emit(jobId, JobStatus.GENERATING_REQUESTER_CONTRACT);
+    this.emit(jobId, JobStatus.GENERATING_DAPI_CONTRACT);
     let requesterContract = await composer.generateRequester(
       jobId,
       address,
@@ -153,7 +158,7 @@ export class DapiService {
     }
 
     // DEPLOYING_REQUESTER_CONTRACT
-    this.emit(jobId, JobStatus.DEPLOYING_REQUESTER_CONTRACT);
+    this.emit(jobId, JobStatus.DEPLOYING_DAPI_CONTRACT);
     let requester = await composer.deployRequester(jobId, requesterName);
     console.log(`Requester contract deployed, and requester is ${requester}`);
     entity.requesterAddress = requester.address;
@@ -167,16 +172,16 @@ export class DapiService {
     console.log('demo contract\n', entity.demo);
 
     // SPONOR_REQUESTER_CONTRACT
-    this.emit(jobId, JobStatus.SPONSORING_REQUESTER_CONTRACT);
+    this.emit(jobId, JobStatus.SPONSORING_DAPI_CONTRACT);
     await composer.sponsorRequester(requester.address);
 
     // DEPLOYING_AIRNODE_TO_AWS
-    this.emit(jobId, JobStatus.DEPLOYING_AIRNODE);
+    this.emit(jobId, JobStatus.DEPLOYING_DAPI);
 
     if (this.configService.get('LOCAL')) {
-      await composer.deployAirnodeLocal(jobId);
+      await composer.deployDapiLocal(jobId);
     } else {
-      await composer.deployAirnode(jobId);
+      await composer.deployDapi(jobId);
     }
 
     this.emit(jobId, JobStatus.DONE);

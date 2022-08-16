@@ -31,7 +31,7 @@ const network = 'Moonbase Alpha';
 // const chainId = "4";
 // const network = "Rinkeby";
 
-export async function generateAirnodeAddress() {
+export async function generateDapiAddress() {
   let mne = await utils.generateMnemonic();
   let addr = await utils.derive(mne);
   return [mne, addr] as const;
@@ -168,8 +168,11 @@ const getArtifact = (jodId: string, requesterName: string) => {
   return require(artifactPath);
 };
 
-export async function generateConfig(jobId: string, o: any) {
-  let config = await createConfigLocal(airnodeRrp, chainId, [o]);
+export async function generateConfig(jobId: string, o: any, isLocal: boolean) {
+  let config = await createConfigAws(airnodeRrp, chainId, [o]);
+  if (isLocal === true) {
+    config = await createConfigLocal(airnodeRrp, chainId, [o]);
+  }
   let ois = config.ois[0];
   // generate triggers
   let triggers = [];
@@ -232,7 +235,7 @@ export async function generateSecrets(
   }
 }
 
-export async function deployAirnode(jobId: string) {
+export async function deployDapi(jobId: string) {
   let cmd = `cd workspace/${jobId} && docker run --rm \
     --env-file ../../aws.env \
     -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) \
@@ -243,7 +246,7 @@ export async function deployAirnode(jobId: string) {
   execSync(cmd);
 }
 
-export async function deployAirnodeLocal(jobId: string) {
+export async function deployDapiLocal(jobId: string) {
   let cmd = `cd workspace/${jobId} && docker run --detach \
     --net host \
     --volume "$(pwd)/config:/app/config" \
