@@ -89,6 +89,7 @@ export class DapiService {
       tags: ois['tags'],
       demo: null,
       requester: null,
+      requesterAbi: null,
       requesterAddress: null,
       triggers: null,
       create_at: new Date(),
@@ -162,6 +163,7 @@ export class DapiService {
     let requester = await composer.deployRequester(jobId, requesterName);
     console.log(`Requester contract deployed, and requester is ${requester}`);
     entity.requesterAddress = requester.address;
+    entity.requesterAbi = requester.abi;
 
     // genreate demo contract
     entity.demo = await createDemoContract(

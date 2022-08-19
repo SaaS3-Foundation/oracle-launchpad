@@ -133,7 +133,7 @@ export async function deployWithWeb3(abi: any, bytecode: any) {
   );
   const receipt = await web3.eth.sendSignedTransaction(tx.rawTransaction);
   console.log(`Contract deployed at address: ${receipt.contractAddress}`);
-  return { address: receipt.contractAddress };
+  return { address: receipt.contractAddress, abi: abi };
 }
 
 async function deployWithEtherjs(abi: any, bytecode: string) {

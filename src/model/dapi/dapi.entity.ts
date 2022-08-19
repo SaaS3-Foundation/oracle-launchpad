@@ -32,6 +32,9 @@ export class DapiEntity {
   @Column({ type: 'text', nullable: true })
   requester: string;
 
+  @Column({ type: 'jsonb', nullable: true })
+  requesterAbi: any;
+
   @Column({ type: 'numeric' })
   status: number;
 
