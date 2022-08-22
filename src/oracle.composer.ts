@@ -38,7 +38,7 @@ export async function generateDapiAddress() {
 }
 
 export async function sponsorRequester(requester: string) {
-  let cmd = `npx @api3/airnode-admin sponsor-requester \
+  let cmd = `npx @api3/airnode-admin@0.7.2 sponsor-requester \
      --provider-url ${provider} \
      --airnode-rrp-address ${airnodeRrp} \
      --sponsor-mnemonic "${sponsorMnemonic}" \
