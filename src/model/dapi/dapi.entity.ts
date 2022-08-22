@@ -23,7 +23,7 @@ export class DapiEntity {
   @Column({ type: 'varchar', length: 20, array: true, nullable: true })
   tags: string[];
 
-  @Column({ type: 'varchar', length: 40, nullable: true })
+  @Column({ type: 'varchar', length: 120, nullable: true })
   requesterAddress: string;
 
   @Column({ type: 'text', nullable: true })

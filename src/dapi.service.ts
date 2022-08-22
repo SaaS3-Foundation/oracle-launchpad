@@ -149,7 +149,7 @@ export class DapiService {
     );
     entity.requester = requesterContract;
 
-    if (this.configService.get('NO_DEPLOY_AND_SPONSOR')) {
+    if (this.configService.get('NO_DEPLOY_AND_SPONSOR') === 'true') {
       this.emit(jobId, JobStatus.DONE);
       entity.update_at = new Date();
       entity.status = JobStatus.DONE;
@@ -174,16 +174,20 @@ export class DapiService {
     console.log('demo contract\n', entity.demo);
 
     // SPONOR_REQUESTER_CONTRACT
-    this.emit(jobId, JobStatus.SPONSORING_DAPI_CONTRACT);
-    await composer.sponsorRequester(requester.address);
+    if (this.configService.get('NO_SPONSOR') === 'false') {
+      this.emit(jobId, JobStatus.SPONSORING_DAPI_CONTRACT);
+      await composer.sponsorRequester(requester.address);
+    }
 
     // DEPLOYING_AIRNODE_TO_AWS
-    this.emit(jobId, JobStatus.DEPLOYING_DAPI);
+    if (this.configService.get('NO_DEPLOY_API') === 'false') {
+      this.emit(jobId, JobStatus.DEPLOYING_DAPI);
 
-    if (this.configService.get('LOCAL')) {
-      await composer.deployDapiLocal(jobId);
-    } else {
-      await composer.deployDapi(jobId);
+      if (this.configService.get('LOCAL')) {
+        await composer.deployDapiLocal(jobId);
+      } else {
+        await composer.deployDapi(jobId);
+      }
     }
 
     this.emit(jobId, JobStatus.DONE);
