@@ -24,10 +24,16 @@ export class DapiEntity {
   tags: string[];
 
   @Column({ type: 'varchar', length: 120, nullable: true })
-  requesterAddress: string;
+  demoAddress: string;
 
   @Column({ type: 'text', nullable: true })
   demo: string;
+
+  @Column({ type: 'jsonb', nullable: true })
+  demoAbi: any;
+
+  @Column({ type: 'varchar', length: 120, nullable: true })
+  requesterAddress: string;
 
   @Column({ type: 'text', nullable: true })
   requester: string;

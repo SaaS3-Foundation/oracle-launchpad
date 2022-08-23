@@ -88,6 +88,8 @@ export class DapiService {
       status: JobStatus.PENDING,
       tags: ois['tags'],
       demo: null,
+      demoAbi: null,
+      demoAddress: null,
       requester: null,
       requesterAbi: null,
       requesterAddress: null,
