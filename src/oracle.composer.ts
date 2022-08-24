@@ -111,7 +111,7 @@ export async function generateRequester(
 }
 
 export async function calltest(str: string) {
-  const addr = '0x920ddc804c258b009ea1e7b9dacf8006805a15a8';
+  const addr = '0x44771f41a433fef30147fbe544f84e9dcc4baa88';
   const web3 = new Web3(provider);
   const abi = [
     {
@@ -152,7 +152,7 @@ export async function calltest(str: string) {
   web3.eth.accounts.wallet.add(signer);
 
   await nameConctract.methods
-    .setName(str)
+    .setName(...[str])
     .send({ from: signer.address, gas: 1000000 });
 
   console.log(await nameConctract.methods.getName().call());
