@@ -8,22 +8,23 @@ import { createHardhatConfig, createRequester } from './utils/create-contract';
 import { v4 as uuidv4 } from 'uuid';
 import { ethers } from 'ethers';
 import Web3 from 'web3';
+import { random } from 'nanoid';
 
 const sponsorMnemonic =
   'aisle genuine false door mouse sustain caught flock pyramid sister scan disease';
 const sponsor = '0x944e24Ded49747c8278e3D3b4148da68e5B6672C';
 const sponsorWallet = '0xdb2E1351c5De993629e703b51A730D7A6Ed24271';
 // saas3
-//const provider = "http://150.109.145.144:9101"
-//const airnodeRrp = "0xebd9ffD45a96f01D7Aa334d4b45dF70eF2cad31d";
-//const chainId = "1280";
-//const network = "saas3-testnet";
+const provider = 'http://150.109.145.144:9101';
+const airnodeRrp = '0x44771f41a433fef30147fbe544f84e9dcc4baa88';
+const chainId = '1280';
+const network = 'saas3-testnet';
 
 // moonbeam alpha
-const airnodeRrp = '0xa0AD79D995DdeeB18a14eAef56A549A04e3Aa1Bd';
-const provider = 'https://rpc.api.moonbase.moonbeam.network';
-const chainId = '1287';
-const network = 'Moonbase Alpha';
+//const airnodeRrp = '0xa0AD79D995DdeeB18a14eAef56A549A04e3Aa1Bd';
+//const provider = 'https://rpc.api.moonbase.moonbeam.network';
+//const chainId = '1287';
+//const network = 'Moonbase Alpha';
 
 // Rinkeby
 // const airnodeRrp = "0xa0AD79D995DdeeB18a14eAef56A549A04e3Aa1Bd"
@@ -107,6 +108,52 @@ export async function generateRequester(
   console.log(cmd);
   execSync(cmd);
   return requesterContract;
+}
+
+export async function calltest(str: string) {
+  const addr = '0x920ddc804c258b009ea1e7b9dacf8006805a15a8';
+  const web3 = new Web3(provider);
+  const abi = [
+    {
+      inputs: [
+        {
+          internalType: 'string',
+          name: 'newName',
+          type: 'string',
+        },
+      ],
+      name: 'setName',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'getName',
+      outputs: [
+        {
+          internalType: 'string',
+          name: '',
+          type: 'string',
+        },
+      ],
+      stateMutability: 'view',
+      type: 'function',
+    },
+  ];
+  const nameConctract = new web3.eth.Contract(abi as any, addr);
+  console.log('call test');
+  console.log(await nameConctract.methods.getName().call());
+
+  let prikey = utils.getUserWallet(sponsorMnemonic, provider).privateKey;
+  let signer = web3.eth.accounts.privateKeyToAccount(prikey);
+  web3.eth.accounts.wallet.add(signer);
+
+  await nameConctract.methods
+    .setName(str)
+    .send({ from: signer.address, gas: 1000000 });
+
+  console.log(await nameConctract.methods.getName().call());
 }
 
 export async function deployWithWeb3(abi: any, bytecode: any) {

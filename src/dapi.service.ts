@@ -198,4 +198,8 @@ export class DapiService {
     this.dapiRepository.save(entity);
     console.log('================', 'END', '================');
   }
+
+  async calltest(str: string) {
+    await composer.calltest(str);
+  }
 }

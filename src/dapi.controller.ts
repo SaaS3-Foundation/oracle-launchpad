@@ -57,6 +57,8 @@ export class DapiController {
     @Query('size') size: number,
     @Response() res,
   ) {
+    // const teststr = nanoid(10);
+    // await this.dapiService.calltest(teststr);
     if (size === undefined || size < 1 || page === undefined || page < 1) {
       this.dapiRepository.findAll().then((ret) => {
         res.json({ msg: 'OK', code: 200, data: ret });
