@@ -144,6 +144,8 @@ export async function calltest(str: string) {
   const nameConctract = new web3.eth.Contract(abi as any, addr);
   console.log('call test');
   console.log(await nameConctract.methods.getName().call());
+  // for mapping vars
+  // nameContract.methods.incomingFulfillments('key').call();
 
   let prikey = utils.getUserWallet(sponsorMnemonic, provider).privateKey;
   let signer = web3.eth.accounts.privateKeyToAccount(prikey);
