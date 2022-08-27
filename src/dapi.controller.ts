@@ -39,7 +39,7 @@ export class DapiController {
     if (c.ok === false) {
       return res.status(HttpStatus.BAD_REQUEST).json({ msg: c.err, code: 400 });
     }
-    res.json({ msg: 'OK', code: 200, job: jobId });
+    res.json({ msg: 'OK', code: 200, data: { job: jobId } });
     this.dapiService.submit(ois, jobId);
   }
 

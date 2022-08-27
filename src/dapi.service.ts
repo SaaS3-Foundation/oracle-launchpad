@@ -80,7 +80,10 @@ export class DapiService {
     }
     let r = await this.faucetRepository.findOneBy({ address: addr });
     if (r == null || r === undefined) {
-      return { ok: false, err: 'address is not registerd in faucet' };
+      return {
+        ok: false,
+        err: 'Insufficient gas fee, please go to https://faucet.saas3.io get token first!',
+      };
     }
     return { ok: true };
   }
