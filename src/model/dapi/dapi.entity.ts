@@ -20,6 +20,9 @@ export class DapiEntity {
   @Column({ type: 'varchar', length: 300 })
   creator: string;
 
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  creatorAddress: string;
+
   @Column({ type: 'varchar', length: 20, array: true, nullable: true })
   tags: string[];
 

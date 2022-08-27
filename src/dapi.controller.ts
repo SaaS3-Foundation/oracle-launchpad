@@ -17,6 +17,7 @@ import { map } from 'rxjs/operators';
 import { DapiRepository } from './model/dapi/dapi.respository';
 import { query } from 'express';
 import { existsSync, rmdirSync } from 'fs';
+import { ok } from 'assert';
 
 @Controller('/saas3/dapi')
 export class DapiController {
@@ -26,14 +27,17 @@ export class DapiController {
   ) {}
 
   @Post('/submit')
-  async submit(@Body() ois: any, @Response() res) {
+  async submit(
+    @Query('address') address: string,
+    @Body() ois: any,
+    @Response() res,
+  ) {
     // validate ois
     // if ok
     const jobId = nanoid(10);
-    if (!this.dapiService.check(ois)) {
-      return res
-        .status(HttpStatus.BAD_REQUEST)
-        .json({ msg: 'Invalid input', code: 400 });
+    let c = await this.dapiService.check(ois, address);
+    if (c.ok === false) {
+      return res.status(HttpStatus.BAD_REQUEST).json({ msg: c.err, code: 400 });
     }
     res.json({ msg: 'OK', code: 200, job: jobId });
     this.dapiService.submit(ois, jobId);

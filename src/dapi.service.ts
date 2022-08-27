@@ -8,6 +8,7 @@ import * as composer from './oracle.composer';
 import { DapiRepository } from './model/dapi/dapi.respository';
 import { createDemoContract } from './utils/create-contract';
 import { ConfigService, ConfigModule } from '@nestjs/config';
+import { FaucetRepository } from './model/faucet/faucet.respository';
 
 enum JobStatus {
   PENDING = 0, // 0%
@@ -48,6 +49,7 @@ export class DapiService {
     private readonly ws: EventsGateway,
     private readonly dapiRepository: DapiRepository,
     private readonly configService: ConfigService,
+    private readonly faucetRepository: FaucetRepository,
   ) {}
 
   emit(jobId: string, s: JobStatus) {
@@ -63,17 +65,24 @@ export class DapiService {
     return { sponsor: sponsor, requester: requester };
   }
 
-  check(ois: any): boolean {
+  async check(ois: any, addr: string): Promise<any> {
     if (ois['title'] == undefined || ois['title'] == '') {
-      return false;
+      return { ok: false, err: 'title is required' };
     }
     if (ois['creator'] == undefined || ois['creator'].length == 0) {
-      return false;
+      return { ok: false, err: 'creator is required' };
     }
     if (ois['description'] == undefined || ois['description'] == '') {
-      return false;
+      return { ok: false, err: 'description is required' };
     }
-    return true;
+    if (addr == undefined || addr == '') {
+      return { ok: false, err: 'address is required' };
+    }
+    let r = await this.faucetRepository.findOneBy({ address: addr });
+    if (r == null || r === undefined) {
+      return { ok: false, err: 'address is not registerd in faucet' };
+    }
+    return { ok: true };
   }
 
   async submit(ois: any, jobId: string) {
@@ -84,6 +93,7 @@ export class DapiService {
       id: jobId,
       title: ois['title'],
       creator: ois['creator'],
+      creatorAddress: ois['address'],
       description: ois['description'],
       status: JobStatus.PENDING,
       tags: ois['tags'],
@@ -101,6 +111,7 @@ export class DapiService {
     delete ois['creator'];
     delete ois['description'];
     delete ois['tags'];
+    delete ois['address'];
 
     workspace(jobId);
     console.log(ois);
