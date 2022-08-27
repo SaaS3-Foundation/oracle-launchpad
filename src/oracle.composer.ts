@@ -16,7 +16,7 @@ const sponsor = '0x944e24Ded49747c8278e3D3b4148da68e5B6672C';
 const sponsorWallet = '0xdb2E1351c5De993629e703b51A730D7A6Ed24271';
 // saas3
 const provider = 'http://150.109.145.144:9101';
-const airnodeRrp = '0x3b5cb45e119b6ab04e8b73c54bf023dc304c11ad';
+const airnodeRrp = '0x44771f41a433fef30147fbe544f84e9dcc4baa88';
 const chainId = '1280';
 const network = 'saas3-testnet';
 

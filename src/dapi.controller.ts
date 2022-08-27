@@ -25,6 +25,7 @@ export class DapiController {
     private readonly dapiService: DapiService,
     private readonly dapiRepository: DapiRepository,
   ) {}
+  private created: string[] = [];
 
   @Post('/submit')
   async submit(
@@ -39,6 +40,13 @@ export class DapiController {
     if (c.ok === false) {
       return res.status(HttpStatus.BAD_REQUEST).json({ msg: c.err, code: 400 });
     }
+    let exist = this.created.includes(address);
+    if (exist === true) {
+      return res
+        .status(HttpStatus.BAD_REQUEST)
+        .json({ msg: 'your orale already has been created', code: 400 });
+    }
+    this.created.push(address);
     res.json({ msg: 'OK', code: 200, data: { job: jobId } });
     this.dapiService.submit(ois, jobId);
   }

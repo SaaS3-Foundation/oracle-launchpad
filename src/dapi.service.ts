@@ -176,10 +176,15 @@ export class DapiService {
 
     // DEPLOYING_REQUESTER_CONTRACT
     this.emit(jobId, JobStatus.DEPLOYING_DAPI_CONTRACT);
-    let requester = await composer.deployRequester(jobId, requesterName);
-    console.log(`Requester contract deployed, and requester is ${requester}`);
-    entity.requesterAddress = requester.address;
-    entity.requesterAbi = requester.abi;
+    try {
+      let requester = await composer.deployRequester(jobId, requesterName);
+      console.log(`Requester contract deployed, and requester is ${requester}`);
+      entity.requesterAddress = requester.address;
+      entity.requesterAbi = requester.abi;
+    } catch (e) {
+      console.log(e);
+      this.emit(jobId, JobStatus.ERROR);
+    }
 
     // genreate demo contract
     entity.demo = await createDemoContract(
