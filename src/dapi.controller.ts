@@ -44,11 +44,14 @@ export class DapiController {
     if (exist === true) {
       return res
         .status(HttpStatus.BAD_REQUEST)
-        .json({ msg: 'your orale already has been created', code: 400 });
+        .json({
+          msg: 'Your Orale Request Has been Already Submitted',
+          code: 400,
+        });
     }
     this.created.push(address);
     res.json({ msg: 'OK', code: 200, data: { job: jobId } });
-    this.dapiService.submit(ois, jobId);
+    this.dapiService.submit(ois, jobId, address);
   }
 
   @Post('/acquire')

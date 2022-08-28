@@ -82,13 +82,13 @@ export class DapiService {
     if (r == null || r === undefined) {
       return {
         ok: false,
-        err: 'Insufficient gas fee, please go to https://faucet.saas3.io get token first!',
+        err: 'Insufficient gas fee, please go to https://www.saas3.io/faucet get token first!',
       };
     }
     return { ok: true };
   }
 
-  async submit(ois: any, jobId: string) {
+  async submit(ois: any, jobId: string, creatorAddress: string) {
     this.emit(jobId, JobStatus.PENDING);
 
     console.log('================', jobId, '================');
@@ -96,7 +96,7 @@ export class DapiService {
       id: jobId,
       title: ois['title'],
       creator: ois['creator'],
-      creatorAddress: ois['address'],
+      creatorAddress: creatorAddress,
       description: ois['description'],
       status: JobStatus.PENDING,
       tags: ois['tags'],
@@ -176,8 +176,9 @@ export class DapiService {
 
     // DEPLOYING_REQUESTER_CONTRACT
     this.emit(jobId, JobStatus.DEPLOYING_DAPI_CONTRACT);
+    let requester = { address: '', abi: {} };
     try {
-      let requester = await composer.deployRequester(jobId, requesterName);
+      requester = await composer.deployRequester(jobId, requesterName);
       console.log(`Requester contract deployed, and requester is ${requester}`);
       entity.requesterAddress = requester.address;
       entity.requesterAbi = requester.abi;
