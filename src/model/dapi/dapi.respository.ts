@@ -64,7 +64,7 @@ export class DapiRepository {
   async updateStatus(id: string, status: number) {
     let res = await this.dataSource
       .getRepository(DapiEntity)
-      .update({ id: id }, { status: status });
+      .update({ id: id }, { status: status, update_at: new Date() });
     if (res.affected) {
       console.log('update status success');
     } else {

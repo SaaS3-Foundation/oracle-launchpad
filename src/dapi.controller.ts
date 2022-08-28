@@ -15,7 +15,6 @@ import { nanoid } from 'nanoid';
 import { interval, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DapiRepository } from './model/dapi/dapi.respository';
-import { query } from 'express';
 import { existsSync, rmdirSync } from 'fs';
 import { ok } from 'assert';
 
@@ -42,16 +41,27 @@ export class DapiController {
     }
     let exist = this.created.includes(address);
     if (exist === true) {
-      return res
-        .status(HttpStatus.BAD_REQUEST)
-        .json({
-          msg: 'Your Orale Request Has been Already Submitted',
-          code: 400,
-        });
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        msg: 'Your Orale Request Has been Already Submitted',
+        code: 400,
+      });
     }
     this.created.push(address);
     res.json({ msg: 'OK', code: 200, data: { job: jobId } });
     this.dapiService.submit(ois, jobId, address);
+  }
+
+  @Get('/status')
+  async getStatusBy(@Query('id') id: string, @Response() res) {
+    let job = await this.dapiRepository.find(id);
+    if (job == null) {
+      return res.json({ msg: 'Not Found', code: 404 });
+    }
+    return res.json({
+      msg: 'OK',
+      code: 200,
+      data: { id: id, status: this.dapiService.status(job.status) },
+    });
   }
 
   @Post('/acquire')

@@ -27,12 +27,11 @@ export class FaucetRepository {
       .getMany();
   }
 
-  async findOneBy(condition: any): Promise<FaucetEntity> {
+  async findOneBy(address: string): Promise<FaucetEntity> {
     return this.dataSource
       .getRepository(FaucetEntity)
       .createQueryBuilder('faucet')
-      .where(condition)
-      .orderBy('faucet.create_at', 'DESC')
+      .where({address: address})
       .getOne();
   }
 

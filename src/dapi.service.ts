@@ -50,7 +50,7 @@ export class DapiService {
     private readonly dapiRepository: DapiRepository,
     private readonly configService: ConfigService,
     private readonly faucetRepository: FaucetRepository,
-  ) {}
+  ) { }
 
   emit(jobId: string, s: JobStatus) {
     this.ws.server.emit('status', {
@@ -58,6 +58,11 @@ export class DapiService {
       status: JobStatus[s],
       progress: s * 10,
     });
+    this.dapiRepository.updateStatus(jobId, s);
+  }
+
+  status(n: number): string {
+    return JobStatus[n];
   }
 
   async acquire(requester: string) {
@@ -78,7 +83,7 @@ export class DapiService {
     if (addr == undefined || addr == '') {
       return { ok: false, err: 'address is required' };
     }
-    let r = await this.faucetRepository.findOneBy({ address: addr });
+    let r = await this.faucetRepository.findOneBy(addr);
     if (r == null || r === undefined) {
       return {
         ok: false,
@@ -110,6 +115,7 @@ export class DapiService {
       create_at: new Date(),
       update_at: new Date(),
     };
+    this.dapiRepository.save(entity);
 
     delete ois['creator'];
     delete ois['description'];
@@ -164,12 +170,10 @@ export class DapiService {
       requesterName,
     );
     entity.requester = requesterContract;
+    this.dapiRepository.update(entity);
 
     if (this.configService.get('NO_DEPLOY_AND_SPONSOR') === 'true') {
       this.emit(jobId, JobStatus.DONE);
-      entity.update_at = new Date();
-      entity.status = JobStatus.DONE;
-      this.dapiRepository.save(entity);
       console.log('================', 'END', '================');
       return;
     }
@@ -185,6 +189,7 @@ export class DapiService {
     } catch (e) {
       console.log(e);
       this.emit(jobId, JobStatus.ERROR);
+      return;
     }
 
     // genreate demo contract
@@ -194,11 +199,18 @@ export class DapiService {
       requester.address,
     );
     console.log('demo contract\n', entity.demo);
+    this.dapiRepository.update(entity);
 
     // SPONOR_REQUESTER_CONTRACT
     if (this.configService.get('NO_SPONSOR') === 'false') {
       this.emit(jobId, JobStatus.SPONSORING_DAPI_CONTRACT);
-      await composer.sponsorRequester(requester.address);
+      try {
+        await composer.sponsorRequester(requester.address);
+      } catch (e) {
+        console.log(e);
+        this.emit(jobId, JobStatus.ERROR);
+        return;
+      }
     }
 
     // DEPLOYING_AIRNODE_TO_AWS
@@ -213,9 +225,6 @@ export class DapiService {
     }
 
     this.emit(jobId, JobStatus.DONE);
-    entity.update_at = new Date();
-    entity.status = JobStatus.DONE;
-    this.dapiRepository.save(entity);
     console.log('================', 'END', '================');
   }
 
