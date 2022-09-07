@@ -31,7 +31,7 @@ export class FaucetRepository {
     return this.dataSource
       .getRepository(FaucetEntity)
       .createQueryBuilder('faucet')
-      .where({address: address})
+      .where({ address: address })
       .getOne();
   }
 

@@ -17,6 +17,7 @@ import { map } from 'rxjs/operators';
 import { DapiRepository } from './model/dapi/dapi.respository';
 import { existsSync, rmdirSync } from 'fs';
 import { ok } from 'assert';
+import { execSync } from 'child_process';
 
 @Controller('/saas3/dapi')
 export class DapiController {
@@ -112,6 +113,11 @@ export class DapiController {
         recursive: true,
       });
     }
+
+    let cmd = `docker stop ${id}`;
+    execSync(cmd);
+    cmd = `docker rm -f ${id}`;
+    execSync(cmd);
 
     await this.dapiRepository.deleteById(id);
     return res.json({ msg: 'OK', code: 200 });

@@ -50,7 +50,7 @@ export class DapiService {
     private readonly dapiRepository: DapiRepository,
     private readonly configService: ConfigService,
     private readonly faucetRepository: FaucetRepository,
-  ) { }
+  ) {}
 
   emit(jobId: string, s: JobStatus) {
     this.ws.server.emit('status', {
@@ -164,13 +164,19 @@ export class DapiService {
     await composer.generateSecrets(jobId, mnemonic, apiKey);
 
     this.emit(jobId, JobStatus.GENERATING_DAPI_CONTRACT);
-    let requesterContract = await composer.generateRequester(
-      jobId,
-      address,
-      requesterName,
-    );
-    entity.requester = requesterContract;
-    this.dapiRepository.update(entity);
+    try {
+      let requesterContract = await composer.generateRequester(
+        jobId,
+        address,
+        requesterName,
+      );
+      entity.requester = requesterContract;
+      this.dapiRepository.update(entity);
+    } catch (e) {
+      console.log(e);
+      this.emit(jobId, JobStatus.ERROR);
+      return;
+    }
 
     if (this.configService.get('NO_DEPLOY_AND_SPONSOR') === 'true') {
       this.emit(jobId, JobStatus.DONE);
