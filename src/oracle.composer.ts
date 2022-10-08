@@ -217,11 +217,12 @@ const getArtifact = (jodId: string, requesterName: string) => {
   return require(artifactPath);
 };
 
-export async function generateConfig(jobId: string, o: any, isLocal: boolean) {
+export async function generateConfig(jobId: string, o: any, isLocal: string) {
   let config = await createConfigAws(airnodeRrp, chainId, [o]);
-  if (isLocal === true) {
+  if (isLocal === 'true') {
     config = await createConfigLocal(airnodeRrp, chainId, [o]);
   }
+  console.log(config);
   let ois = config.ois[0];
   // generate triggers
   let triggers = [];

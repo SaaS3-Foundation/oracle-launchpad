@@ -52,13 +52,13 @@ export class DapiService {
     private readonly faucetRepository: FaucetRepository,
   ) {}
 
-  emit(jobId: string, s: JobStatus) {
+  async emit(jobId: string, s: JobStatus) {
     this.ws.server.emit('status', {
       jobId: jobId,
       status: JobStatus[s],
       progress: s * 10,
     });
-    this.dapiRepository.updateStatus(jobId, s);
+    await this.dapiRepository.updateStatus(jobId, s);
   }
 
   status(n: number): string {
@@ -83,6 +83,7 @@ export class DapiService {
     if (addr == undefined || addr == '') {
       return { ok: false, err: 'address is required' };
     }
+    return { ok: true };
     let r = await this.faucetRepository.findOneBy(addr);
     if (r == null || r === undefined) {
       return {
@@ -94,7 +95,7 @@ export class DapiService {
   }
 
   async submit(ois: any, jobId: string, creatorAddress: string) {
-    this.emit(jobId, JobStatus.PENDING);
+    await this.emit(jobId, JobStatus.PENDING);
 
     console.log('================', jobId, '================');
     let entity = {
@@ -129,7 +130,7 @@ export class DapiService {
     console.log('RequseterName', requesterName);
 
     // GENERATING_DAPI_ADDRESS
-    this.emit(jobId, JobStatus.GENERATING_DAPI_ADDRESS);
+    await this.emit(jobId, JobStatus.GENERATING_DAPI_ADDRESS);
     // const [mnemonic, address] = await composer.generateDapiAddress();
     const [mnemonic, address] = [
       'taxi balance fine alert urban trip forum student question job hazard devote',
@@ -150,8 +151,7 @@ export class DapiService {
         'value'
       ];
     }
-    this.emit(jobId, JobStatus.GENERATING_DAPI_CONFIG);
-    console.log(this.configService.get('LOCAL'));
+    await this.emit(jobId, JobStatus.GENERATING_DAPI_CONFIG);
     let config = await composer.generateConfig(
       jobId,
       ois,
@@ -160,10 +160,10 @@ export class DapiService {
     entity.triggers = JSON.stringify(config.triggers);
 
     // GENERATE_AIRNODE_SECRET
-    this.emit(jobId, JobStatus.GENERATING_DAPI_SECRET);
+    await this.emit(jobId, JobStatus.GENERATING_DAPI_SECRET);
     await composer.generateSecrets(jobId, mnemonic, apiKey);
 
-    this.emit(jobId, JobStatus.GENERATING_DAPI_CONTRACT);
+    await this.emit(jobId, JobStatus.GENERATING_DAPI_CONTRACT);
     try {
       let requesterContract = await composer.generateRequester(
         jobId,
@@ -174,18 +174,18 @@ export class DapiService {
       this.dapiRepository.update(entity);
     } catch (e) {
       console.log(e);
-      this.emit(jobId, JobStatus.ERROR);
+      await this.emit(jobId, JobStatus.ERROR);
       return;
     }
 
     if (this.configService.get('NO_DEPLOY_AND_SPONSOR') === 'true') {
-      this.emit(jobId, JobStatus.DONE);
+      await this.emit(jobId, JobStatus.DONE);
       console.log('================', 'END', '================');
       return;
     }
 
     // DEPLOYING_REQUESTER_CONTRACT
-    this.emit(jobId, JobStatus.DEPLOYING_DAPI_CONTRACT);
+    await this.emit(jobId, JobStatus.DEPLOYING_DAPI_CONTRACT);
     let requester = { address: '', abi: {} };
     try {
       requester = await composer.deployRequester(jobId, requesterName);
@@ -194,7 +194,7 @@ export class DapiService {
       entity.requesterAbi = requester.abi;
     } catch (e) {
       console.log(e);
-      this.emit(jobId, JobStatus.ERROR);
+      await this.emit(jobId, JobStatus.ERROR);
       return;
     }
 
@@ -209,19 +209,19 @@ export class DapiService {
 
     // SPONOR_REQUESTER_CONTRACT
     if (this.configService.get('NO_SPONSOR') === 'false') {
-      this.emit(jobId, JobStatus.SPONSORING_DAPI_CONTRACT);
+      await this.emit(jobId, JobStatus.SPONSORING_DAPI_CONTRACT);
       try {
         await composer.sponsorRequester(requester.address);
       } catch (e) {
         console.log(e);
-        this.emit(jobId, JobStatus.ERROR);
+        await this.emit(jobId, JobStatus.ERROR);
         return;
       }
     }
 
     // DEPLOYING_AIRNODE_TO_AWS
     if (this.configService.get('NO_DEPLOY_API') === 'false') {
-      this.emit(jobId, JobStatus.DEPLOYING_DAPI);
+      await this.emit(jobId, JobStatus.DEPLOYING_DAPI);
 
       if (this.configService.get('LOCAL')) {
         await composer.deployDapiLocal(jobId);
@@ -230,7 +230,7 @@ export class DapiService {
       }
     }
 
-    this.emit(jobId, JobStatus.DONE);
+    await this.emit(jobId, JobStatus.DONE);
     console.log('================', 'END', '================');
   }
 
