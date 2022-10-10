@@ -89,7 +89,7 @@ export async function generateRequester(
     requesterName,
   );
   writeFileSync(
-    join('workspace', jobId, `contracts/${requesterName}.sol`),
+    join('workspace/evm', jobId, `contracts/${requesterName}.sol`),
     requesterContract,
   );
   console.log(requesterContract);
@@ -101,10 +101,10 @@ export async function generateRequester(
     sponsorMnemonic,
   );
   console.log(hardhatCfg);
-  writeFileSync(join('workspace', jobId, `hardhat.config.ts`), hardhatCfg);
+  writeFileSync(join('workspace/evm', jobId, `hardhat.config.ts`), hardhatCfg);
 
   // compile
-  let cmd = `cd workspace/${jobId} && npx hardhat compile`;
+  let cmd = `cd workspace/evm/${jobId} && npx hardhat compile`;
   console.log(cmd);
   execSync(cmd);
   return requesterContract;
@@ -208,7 +208,7 @@ export const deployRequester = async (jobId: string, requesterName: string) => {
 const getArtifact = (jodId: string, requesterName: string) => {
   const artifactPath = join(
     __dirname,
-    '../workspace',
+    '../workspace/evm',
     jodId,
     'artifacts/contracts',
     requesterName + '.sol',
@@ -251,7 +251,7 @@ export async function generateConfig(jobId: string, o: any, isLocal: string) {
   }
 
   writeFileSync(
-    join('workspace', jobId, 'config', 'config.json'),
+    join('workspace/evm', jobId, 'config', 'config.json'),
     JSON.stringify(config, null, 2) + '\n',
   );
   return config;
@@ -265,7 +265,7 @@ export async function generateSecrets(
   let gatewayApiKey = uuidv4();
   if (apiKey === '') {
     writeFileSync(
-      join('workspace', jobId, 'config', 'secrets.env'),
+      join('workspace/evm', jobId, 'config', 'secrets.env'),
       utils.formatSecrets([
         `AIRNODE_WALLET_MNEMONIC=${mnemonic}`,
         `CHAIN_PROVIDER_URL=${provider}`,
@@ -274,7 +274,7 @@ export async function generateSecrets(
     );
   } else {
     writeFileSync(
-      join('workspace', jobId, 'config', 'secrets.env'),
+      join('workspace/evm', jobId, 'config', 'secrets.env'),
       utils.formatSecrets([
         `AIRNODE_WALLET_MNEMONIC=${mnemonic}`,
         `CHAIN_PROVIDER_URL=${provider}`,
@@ -286,7 +286,7 @@ export async function generateSecrets(
 }
 
 export async function deployDapi(jobId: string) {
-  let cmd = `cd workspace/${jobId} && docker run --rm \
+  let cmd = `cd workspace/evm/${jobId} && docker run --rm \
     --env-file ../../aws.env \
     -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) \
     -v "$(pwd)/config:/app/config" \
@@ -297,7 +297,7 @@ export async function deployDapi(jobId: string) {
 }
 
 export async function deployDapiLocal(jobId: string) {
-  let cmd = `cd workspace/${jobId} && docker run --detach \
+  let cmd = `cd workspace/evm/${jobId} && docker run --detach \
     --net host \
     --volume "$(pwd)/config:/app/config" \
     --name ${jobId} \

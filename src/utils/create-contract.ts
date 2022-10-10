@@ -109,7 +109,7 @@ export async function createDemoContract(
 // This demo contract is generated automatically by saas3
 // EDIT it to adapt to your own dAPI
 pragma solidity 0.8.9;
-import "@saas3/oracle-composer/workspace/${jobId}/contracts/${requesterName}.sol";
+import "@saas3/oracle-launchpad/workspace/evm/${jobId}/contracts/${requesterName}.sol";
 
 contract Hello  {
     // define your response data here

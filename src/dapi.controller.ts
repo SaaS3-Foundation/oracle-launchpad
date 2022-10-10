@@ -107,7 +107,7 @@ export class DapiController {
         .status(HttpStatus.NOT_FOUND)
         .json({ msg: 'Not Found', code: 404 });
     }
-    let dir = `workspace/${id}`;
+    let dir = `workspace/evm/${id}`;
     if (existsSync(dir)) {
       rmdirSync(dir, {
         recursive: true,
@@ -156,5 +156,9 @@ export class DapiController {
         .json({ msg: `entity ${id} not Found`, code: 404 });
     }
     return res.json({ msg: 'OK', code: 200, data: entity });
+  }
+
+  @Get("/trigger/deploy")
+  async triggerDeploy(@Response() res) {
   }
 }

@@ -28,14 +28,14 @@ function delay(ms: number) {
 }
 
 function workspace(dir: string) {
-  let cfg = 'workspace/' + dir + '/config';
+  let cfg = 'workspace/evm/' + dir + '/config';
   if (!existsSync(cfg)) {
     mkdirSync(cfg, {
       recursive: true,
     });
   }
 
-  let c = 'workspace/' + dir + '/contracts';
+  let c = 'workspace/evm/' + dir + '/contracts';
   if (!existsSync(c)) {
     mkdirSync(c, {
       recursive: true,
