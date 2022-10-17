@@ -6,9 +6,9 @@ import { OIS } from '@api3/ois';
 import { createConfigAws, createConfigLocal } from './utils/create-config';
 import { createHardhatConfig, createRequester } from './utils/create-contract';
 import { v4 as uuidv4 } from 'uuid';
-import { ethers } from 'ethers';
 import Web3 from 'web3';
 import { random } from 'nanoid';
+import * as composer from './common.composer';
 
 const sponsorMnemonic =
   'aisle genuine false door mouse sustain caught flock pyramid sister scan disease';
@@ -158,51 +158,12 @@ export async function calltest(str: string) {
   console.log(await nameConctract.methods.getName().call());
 }
 
-export async function deployWithWeb3(abi: any, bytecode: any) {
-  const web3 = new Web3(provider);
-  let prikey = utils.getUserWallet(sponsorMnemonic, provider).privateKey;
-  const accountFrom = {
-    privateKey: prikey,
-  };
-  let signer = web3.eth.accounts.privateKeyToAccount(prikey);
-  web3.eth.accounts.wallet.add(signer);
-
-  const incrementer = new web3.eth.Contract(abi);
-  const incrementerTx = incrementer.deploy({
-    data: bytecode,
-    arguments: [airnodeRrp],
-  });
-  const tx = await web3.eth.accounts.signTransaction(
-    {
-      data: incrementerTx.encodeABI(),
-      gas: await incrementerTx.estimateGas(),
-      //gasPrice: web3.utils.toWei('1000', 'gwei'),
-    },
-    accountFrom.privateKey,
-  );
-  const receipt = await web3.eth.sendSignedTransaction(tx.rawTransaction);
-  console.log(`Contract deployed at address: ${receipt.contractAddress}`);
-  return { address: receipt.contractAddress, abi: abi };
-}
-
-async function deployWithEtherjs(abi: any, bytecode: string) {
-  const contractFactory = new ethers.ContractFactory(
-    abi,
-    bytecode,
-    utils.getUserWallet(sponsorMnemonic, provider),
-  );
-  let args = [airnodeRrp];
-  const contract = await contractFactory.deploy(...args, { gasLimit: 500000 });
-  await contract.deployed();
-  return contract;
-}
-
 export const deployRequester = async (jobId: string, requesterName: string) => {
   const artifact = getArtifact(jobId, requesterName);
 
   console.log('Deploying contract', requesterName, '...');
 
-  return deployWithWeb3(artifact.abi, artifact.bytecode);
+  return composer.deployWithWeb3(artifact.abi, artifact.bytecode);
 };
 
 const getArtifact = (jodId: string, requesterName: string) => {

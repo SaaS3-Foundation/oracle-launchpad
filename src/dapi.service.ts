@@ -9,6 +9,8 @@ import { DapiRepository } from './model/dapi/dapi.respository';
 import { createDemoContract } from './utils/create-contract';
 import { ConfigService, ConfigModule } from '@nestjs/config';
 import { FaucetRepository } from './model/faucet/faucet.respository';
+import * as phala from './phat.composer'
+import * as c_composer from './common.composer';
 
 enum JobStatus {
   PENDING = 0, // 0%
@@ -92,6 +94,21 @@ export class DapiService {
       };
     }
     return { ok: true };
+  }
+  async checkOpenapi(spec: any): Promise<any> {
+    return { ok: true };
+  }
+
+  async submitV2(spec: any, jobId: string): Promise<any> {
+    // compile and depoly anchor
+    // TODO this is optional for future
+    phala.buildAnchor();
+    let artifact = phala.loadAnchorArtifact();
+    await c_composer.deployWithWeb3(artifact.abi, artifact.bytecode);
+    // compile and deploy dRuntime
+    phala.builddRuntime();
+    await phala.deploydRuntime();
+
   }
 
   async submit(ois: any, jobId: string, creatorAddress: string) {

@@ -52,6 +52,17 @@ export class DapiController {
     this.dapiService.submit(ois, jobId, address);
   }
 
+  @Post('/submit/v2')
+  async submitV2(@Body() spec: any, @Response() res) {
+    const jobId = nanoid(10);
+    let c = await this.dapiService.checkOpenapi(spec);
+    if (c.ok === false) {
+      return res.status(HttpStatus.BAD_REQUEST).json({ msg: c.err, code: 400 });
+    }
+    res.json({ msg: 'OK', code: 200, data: { job: jobId } });
+    this.dapiService.submitV2(spec, jobId);
+  }
+
   @Get('/status')
   async getStatusBy(@Query('id') id: string, @Response() res) {
     let job = await this.dapiRepository.find(id);
