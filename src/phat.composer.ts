@@ -9,11 +9,11 @@ import sdk from '@phala/sdk';
 import { TxQueue, blockBarrier, hex, checkUntil, checkUntilEq } from './phat.utils';
 
 const CONTRACT_NAMES = [
-    ['anchor', 'anchor'],
+    ['sample_oracle', 'sample_oracle'],
 ]
 
 function loaddRuntime(name: string) {
-    const wasmPath = `../workspace/phala/dRuntime-fat/target/ink/${name}/${name}.wasm`;
+    const wasmPath = `../workspace/phala/dRuntime-fat/target/ink/${name}.wasm`;
     const metadataPath: string = `../../target/ink/${name}/metadata.json`;
     const wasm = hex(fs.readFileSync(wasmPath, 'hex'));
     const metadata = JSON.parse(fs.readFileSync(metadataPath).toString());
