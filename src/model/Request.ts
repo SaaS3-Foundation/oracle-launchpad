@@ -1,0 +1,14 @@
+import { ChainType } from "@api3/airnode-node";
+import { ChainInfo, CreatorInfo, OracleInfo } from "./dapi/dapi.entity";
+
+export class HttpRequest {
+  uri: string;
+  method: string;
+  headers: Record<string, string>;
+  body: any;
+}
+
+export class OracleRequest {
+  oracleInfo: OracleInfo;
+  creatorInfo: CreatorInfo;
+}

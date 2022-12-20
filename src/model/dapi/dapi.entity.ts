@@ -6,49 +6,54 @@ import {
   CreateDateColumn,
 } from 'typeorm';
 
+export enum ChainType {
+  EVM = 0,
+  PHALA
+}
+
+export class ChainInfo {
+  type: ChainType;
+  name: string;
+  wsProvider: string;
+  httpProvider: string;
+  id: number;
+}
+
+export class Web2Info {
+  uri: string;
+  _path: string;
+  _type: string;
+  _times: string;
+}
+export class OracleInfo {
+  sourceChain: ChainInfo;
+  targetChain: ChainInfo;
+  title: string;
+  description: string;
+  address: string;
+  web2Info: Web2Info;
+}
+export class CreatorInfo {
+  notes: string
+}
+
 @Entity('dapi')
 export class DapiEntity {
+  public constructor(init?:Partial<DapiEntity>) {
+    Object.assign(this, init);
+  }
+  
   @PrimaryColumn()
   id: string;
 
-  @Column({ type: 'varchar', length: 50 })
-  title: string;
-
-  @Column({ type: 'varchar', length: 1024, nullable: true })
-  description: string | null;
-
-  @Column({ type: 'varchar', length: 300 })
-  creator: string;
-
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  creatorAddress: string;
-
-  @Column({ type: 'varchar', length: 20, array: true, nullable: true })
-  tags: string[];
-
-  @Column({ type: 'varchar', length: 120, nullable: true })
-  demoAddress: string;
-
-  @Column({ type: 'text', nullable: true })
-  demo: string;
+  @Column({ type: 'jsonb', nullable: true })
+  oracleInfo: OracleInfo;
 
   @Column({ type: 'jsonb', nullable: true })
-  demoAbi: any;
-
-  @Column({ type: 'varchar', length: 120, nullable: true })
-  requesterAddress: string;
-
-  @Column({ type: 'text', nullable: true })
-  requester: string;
-
-  @Column({ type: 'jsonb', nullable: true })
-  requesterAbi: any;
+  creatorInfo: CreatorInfo;
 
   @Column({ type: 'numeric' })
   status: number;
-
-  @Column({ type: 'text', nullable: true })
-  triggers: string;
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   create_at: Date;

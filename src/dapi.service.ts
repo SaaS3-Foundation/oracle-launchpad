@@ -4,45 +4,24 @@ import { Injectable, SerializeOptions } from '@nestjs/common';
 import { existsSync, mkdirSync } from 'fs';
 import { interval, map, Observable } from 'rxjs';
 import { EventsGateway } from './events.gateway';
-import * as composer from './oracle.composer';
 import { DapiRepository } from './model/dapi/dapi.respository';
-import { createDemoContract } from './utils/create-contract';
 import { ConfigService, ConfigModule } from '@nestjs/config';
 import { FaucetRepository } from './model/faucet/faucet.respository';
-import * as phala from './phat.composer'
-import * as c_composer from './common.composer';
+import * as phala from './phat.composer';
+import { DapiEntity, OracleInfo } from './model/dapi/dapi.entity';
+import { OracleRequest } from './model/Request';
 
 enum JobStatus {
   PENDING = 0, // 0%
-  GENERATING_DAPI_ADDRESS,
-  GENERATING_DAPI_CONFIG,
-  GENERATING_DAPI_SECRET,
-  GENERATING_DAPI_CONTRACT,
-  DEPLOYING_DAPI_CONTRACT,
-  SPONSORING_DAPI_CONTRACT,
-  DEPLOYING_DAPI,
+  DEPLOYING_SAAS3_PROTOCOL,
+  SAAS3_PROTOCOL_DEPOLYED,
+  DEPOLYING_SAAS3_DRUNTIME,
   ERROR,
   DONE, // 100%
 }
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function workspace(dir: string) {
-  let cfg = 'workspace/evm/' + dir + '/config';
-  if (!existsSync(cfg)) {
-    mkdirSync(cfg, {
-      recursive: true,
-    });
-  }
-
-  let c = 'workspace/evm/' + dir + '/contracts';
-  if (!existsSync(c)) {
-    mkdirSync(c, {
-      recursive: true,
-    });
-  }
 }
 
 @Injectable()
@@ -67,191 +46,37 @@ export class DapiService {
     return JobStatus[n];
   }
 
-  async acquire(requester: string) {
-    let sponsor = await composer.sponsorRequester(requester);
-    return { sponsor: sponsor, requester: requester };
-  }
-
-  async check(ois: any, addr: string): Promise<any> {
-    if (ois['title'] == undefined || ois['title'] == '') {
-      return { ok: false, err: 'title is required' };
-    }
-    if (ois['creator'] == undefined || ois['creator'].length == 0) {
-      return { ok: false, err: 'creator is required' };
-    }
-    if (ois['description'] == undefined || ois['description'] == '') {
-      return { ok: false, err: 'description is required' };
-    }
-    if (addr == undefined || addr == '') {
-      return { ok: false, err: 'address is required' };
-    }
-    return { ok: true };
-    let r = await this.faucetRepository.findOneBy(addr);
-    if (r == null || r === undefined) {
-      return {
-        ok: false,
-        err: 'Insufficient gas fee, please go to https://www.saas3.io/faucet get token first!',
-      };
-    }
-    return { ok: true };
-  }
   async checkOpenapi(spec: any): Promise<any> {
     return { ok: true };
   }
 
-  async submitV2(spec: any, jobId: string): Promise<any> {
+  async submitV2(req: OracleRequest, jobId: string): Promise<any> {
     // compile and depoly anchor
     // TODO this is optional for future
-    phala.buildAnchor();
-    let artifact = phala.loadAnchorArtifact();
-    await c_composer.deployWithWeb3(artifact.abi, artifact.bytecode);
+    //let artifact = phala.loadAnchorArtifact();
+    //await c_composer.deployWithWeb3(artifact.abi, artifact.bytecode);
     // compile and deploy dRuntime
-    phala.builddRuntime();
-    await phala.deploydRuntime();
-
-  }
-
-  async submit(ois: any, jobId: string, creatorAddress: string) {
-    await this.emit(jobId, JobStatus.PENDING);
-
-    console.log('================', jobId, '================');
-    let entity = {
+    let entity = new DapiEntity(
+      {
       id: jobId,
-      title: ois['title'],
-      creator: ois['creator'],
-      creatorAddress: creatorAddress,
-      description: ois['description'],
+      oracleInfo: req.oracleInfo,
+      creatorInfo: req.creatorInfo,
       status: JobStatus.PENDING,
-      tags: ois['tags'],
-      demo: null,
-      demoAbi: null,
-      demoAddress: null,
-      requester: null,
-      requesterAbi: null,
-      requesterAddress: null,
-      triggers: null,
       create_at: new Date(),
       update_at: new Date(),
-    };
+      }
+    );
     this.dapiRepository.save(entity);
-
-    delete ois['creator'];
-    delete ois['description'];
-    delete ois['tags'];
-    delete ois['address'];
-
-    workspace(jobId);
-    console.log(ois);
-
-    let requesterName = ois['title'].replace(/\s/g, '');
-    console.log('RequseterName', requesterName);
-
-    // GENERATING_DAPI_ADDRESS
-    await this.emit(jobId, JobStatus.GENERATING_DAPI_ADDRESS);
-    // const [mnemonic, address] = await composer.generateDapiAddress();
-    const [mnemonic, address] = [
-      'taxi balance fine alert urban trip forum student question job hazard devote',
-      '0x2156217a193B4bC6c3c24012611D124310663060',
-    ];
-    console.log('DAPI mnemonic:', mnemonic);
-    console.log('DAPI address:', address);
-
-    // GENERATE_DAPI_CONFIG
-    let apiKey = '';
-    if (
-      Object.entries(ois['apiSpecifications']['components']['securitySchemes'])
-        .length > 0
-    ) {
-      apiKey =
-        ois['apiSpecifications']['components']['securitySchemes']['1']['value'];
-      delete ois['apiSpecifications']['components']['securitySchemes']['1'][
-        'value'
-      ];
-    }
-    await this.emit(jobId, JobStatus.GENERATING_DAPI_CONFIG);
-    let config = await composer.generateConfig(
-      jobId,
-      ois,
-      this.configService.get('LOCAL'),
+    return;
+    const sponsorMnemonic =
+      'aisle genuine false door mouse sustain caught flock pyramid sister scan disease';
+    await phala.deploydRuntime(
+      sponsorMnemonic,
+      this.configService.get('CLUSTER_ID'),
+      this.configService.get('CHAIN'),
+      this.configService.get('PRUNTIME'),
+      '/Users/songtianyi/workhub/github/phat-stateful-rollup/phat/artifacts/sample_oracle/sample_oracle.contract',
+      {},
     );
-    entity.triggers = JSON.stringify(config.triggers);
-
-    // GENERATE_AIRNODE_SECRET
-    await this.emit(jobId, JobStatus.GENERATING_DAPI_SECRET);
-    await composer.generateSecrets(jobId, mnemonic, apiKey);
-
-    await this.emit(jobId, JobStatus.GENERATING_DAPI_CONTRACT);
-    try {
-      let requesterContract = await composer.generateRequester(
-        jobId,
-        address,
-        requesterName,
-      );
-      entity.requester = requesterContract;
-      this.dapiRepository.update(entity);
-    } catch (e) {
-      console.log(e);
-      await this.emit(jobId, JobStatus.ERROR);
-      return;
-    }
-
-    if (this.configService.get('NO_DEPLOY_AND_SPONSOR') === 'true') {
-      await this.emit(jobId, JobStatus.DONE);
-      console.log('================', 'END', '================');
-      return;
-    }
-
-    // DEPLOYING_REQUESTER_CONTRACT
-    await this.emit(jobId, JobStatus.DEPLOYING_DAPI_CONTRACT);
-    let requester = { address: '', abi: {} };
-    try {
-      requester = await composer.deployRequester(jobId, requesterName);
-      console.log(`Requester contract deployed, and requester is ${requester}`);
-      entity.requesterAddress = requester.address;
-      entity.requesterAbi = requester.abi;
-    } catch (e) {
-      console.log(e);
-      await this.emit(jobId, JobStatus.ERROR);
-      return;
-    }
-
-    // genreate demo contract
-    entity.demo = await createDemoContract(
-      jobId,
-      requesterName,
-      requester.address,
-    );
-    console.log('demo contract\n', entity.demo);
-    this.dapiRepository.update(entity);
-
-    // SPONOR_REQUESTER_CONTRACT
-    if (this.configService.get('NO_SPONSOR') === 'false') {
-      await this.emit(jobId, JobStatus.SPONSORING_DAPI_CONTRACT);
-      try {
-        await composer.sponsorRequester(requester.address);
-      } catch (e) {
-        console.log(e);
-        await this.emit(jobId, JobStatus.ERROR);
-        return;
-      }
-    }
-
-    // DEPLOYING_AIRNODE_TO_AWS
-    if (this.configService.get('NO_DEPLOY_API') === 'false') {
-      await this.emit(jobId, JobStatus.DEPLOYING_DAPI);
-
-      if (this.configService.get('LOCAL')) {
-        await composer.deployDapiLocal(jobId);
-      } else {
-        await composer.deployDapi(jobId);
-      }
-    }
-
-    await this.emit(jobId, JobStatus.DONE);
-    console.log('================', 'END', '================');
-  }
-
-  async calltest(str: string) {
-    await composer.calltest(str);
   }
 }

@@ -9,6 +9,7 @@ async function bootstrap() {
     cert: readFileSync('./secrets/rpc.saas3.io_bundle.crt'),
   };
   const app = await NestFactory.create(AppModule, { httpsOptions });
+  //const app = await NestFactory.create(AppModule, {});
   app.enableCors();
 
   const config = new DocumentBuilder()
