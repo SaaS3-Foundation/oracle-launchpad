@@ -21,9 +21,11 @@ export class ChainInfo {
 }
 
 export class Web2Info {
+  title: string;
   uri: string;
   method: RequestMethod;
   headers: Record<string, string>;
+  params: Record<string, string>;
   body: any;
 }
 

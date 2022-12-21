@@ -4,6 +4,7 @@ import { ChainInfo, CreatorInfo, OracleInfo } from './dapi/dapi.entity';
 export class HttpRequest {
   uri: string;
   method: string;
+  params: Record<string, string>;
   headers: Record<string, string>;
   body: any;
 }
