@@ -1,3 +1,4 @@
+import { RequestMethod } from '@nestjs/common';
 import {
   PrimaryColumn,
   Entity,
@@ -7,24 +8,25 @@ import {
 } from 'typeorm';
 
 export enum ChainType {
-  EVM = 0,
-  PHALA
+  EVM = 0, // evm compatible chain
+  PHALA,
 }
 
 export class ChainInfo {
   type: ChainType;
   name: string;
-  wsProvider: string;
-  httpProvider: string;
-  id: number;
+  wsProvider: string; // websocket provider
+  httpProvider: string; // http provider
+  id: number; // chainid
 }
 
 export class Web2Info {
   uri: string;
-  _path: string;
-  _type: string;
-  _times: string;
+  method: RequestMethod;
+  headers: Record<string, string>;
+  body: any;
 }
+
 export class OracleInfo {
   sourceChain: ChainInfo;
   targetChain: ChainInfo;
@@ -34,15 +36,15 @@ export class OracleInfo {
   web2Info: Web2Info;
 }
 export class CreatorInfo {
-  notes: string
+  notes: string;
 }
 
 @Entity('dapi')
 export class DapiEntity {
-  public constructor(init?:Partial<DapiEntity>) {
+  public constructor(init?: Partial<DapiEntity>) {
     Object.assign(this, init);
   }
-  
+
   @PrimaryColumn()
   id: string;
 

@@ -1,5 +1,5 @@
-import { ChainType } from "@api3/airnode-node";
-import { ChainInfo, CreatorInfo, OracleInfo } from "./dapi/dapi.entity";
+import { ChainType } from '@api3/airnode-node';
+import { ChainInfo, CreatorInfo, OracleInfo } from './dapi/dapi.entity';
 
 export class HttpRequest {
   uri: string;

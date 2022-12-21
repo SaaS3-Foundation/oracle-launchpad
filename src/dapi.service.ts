@@ -56,16 +56,14 @@ export class DapiService {
     //let artifact = phala.loadAnchorArtifact();
     //await c_composer.deployWithWeb3(artifact.abi, artifact.bytecode);
     // compile and deploy dRuntime
-    let entity = new DapiEntity(
-      {
+    let entity = new DapiEntity({
       id: jobId,
       oracleInfo: req.oracleInfo,
       creatorInfo: req.creatorInfo,
       status: JobStatus.PENDING,
       create_at: new Date(),
       update_at: new Date(),
-      }
-    );
+    });
     this.dapiRepository.save(entity);
     return;
     const sponsorMnemonic =
