@@ -39,6 +39,11 @@ export class CreatorInfo {
   notes: string;
 }
 
+export enum Visibility {
+  PUBLIC,
+  PRIVATE,
+}
+
 @Entity('dapi')
 export class DapiEntity {
   public constructor(init?: Partial<DapiEntity>) {
@@ -56,6 +61,9 @@ export class DapiEntity {
 
   @Column({ type: 'numeric' })
   status: number;
+
+  @Column({ type: 'numeric' })
+  visibility: Visibility;
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   create_at: Date;
