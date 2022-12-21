@@ -65,6 +65,9 @@ export class DapiEntity {
   @Column({ type: 'numeric' })
   visibility: Visibility;
 
+  @Column({ type: 'string', nullable: true })
+  logo_url: string;
+
   @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   create_at: Date;
 
