@@ -8,17 +8,13 @@ import { DapiRepository } from './model/dapi/dapi.respository';
 import { ConfigService, ConfigModule } from '@nestjs/config';
 import { FaucetRepository } from './model/faucet/faucet.respository';
 import * as phala from './phat.composer';
-import { ChainType, DapiEntity, OracleInfo } from './model/dapi/dapi.entity';
+import {
+  ChainType,
+  DapiEntity,
+  JobStatus,
+  OracleInfo,
+} from './model/dapi/dapi.entity';
 import { OracleRequest } from './model/Request';
-
-enum JobStatus {
-  PENDING = 0, // 0%
-  DEPLOYING_SAAS3_PROTOCOL,
-  SAAS3_PROTOCOL_DEPOLYED,
-  DEPOLYING_SAAS3_DRUNTIME,
-  ERROR,
-  DONE, // 100%
-}
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));

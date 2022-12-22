@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
-import { DapiEntity } from './dapi.entity';
+import { DapiEntity, JobStatus } from './dapi.entity';
 
 @Injectable()
 export class DapiRepository {
@@ -15,7 +15,7 @@ export class DapiRepository {
     let data = await this.dataSource
       .getRepository(DapiEntity)
       .createQueryBuilder('dapi')
-      .where({ status: 9 })
+      .where({ status: JobStatus.DONE })
       .orderBy('dapi.create_at', 'DESC')
       .take(size)
       .skip((index - 1) * size)

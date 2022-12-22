@@ -7,6 +7,15 @@ import {
   CreateDateColumn,
 } from 'typeorm';
 
+export enum JobStatus {
+  PENDING = 0, // 0%
+  DEPLOYING_SAAS3_PROTOCOL,
+  SAAS3_PROTOCOL_DEPOLYED,
+  DEPOLYING_SAAS3_DRUNTIME,
+  ERROR,
+  DONE, // 100%
+}
+
 export enum ChainType {
   EVM = 0, // evm compatible chain
   PHALA,
@@ -18,6 +27,8 @@ export class ChainInfo {
   wsProvider: string; // websocket provider
   httpProvider: string; // http provider
   id: number; // chainid
+  clusterId: string; // required when type is PHALA
+  pruntime: string; // required when type is PHALA
 }
 
 export class Web2Info {
@@ -64,10 +75,10 @@ export class DapiEntity {
   @Column({ type: 'numeric' })
   status: number;
 
-  @Column({ type: 'numeric' })
+  @Column({ type: 'numeric', nullable: true })
   visibility: Visibility;
 
-  @Column({ type: 'string', nullable: true })
+  @Column({ type: String, nullable: true })
   logo_url: string;
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })

@@ -10,7 +10,6 @@ import {
   Put,
 } from '@nestjs/common';
 import { DapiService } from './dapi.service';
-import { OIS } from '@api3/ois';
 import { nanoid } from 'nanoid';
 import { interval, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
