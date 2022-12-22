@@ -1,6 +1,0 @@
-[submodule "workspace/phala/phat-stateful-rollup"]
-	path = workspace/phala/phat-stateful-rollup
-	url = git@github.com:Phala-Network/phat-stateful-rollup.git
-[submodule "workspace/phala/dRuntime-fat"]
-	path = workspace/phala/dRuntime-fat
-	url = git@github.com:SaaS3-Foundation/dRuntime-fat.git
