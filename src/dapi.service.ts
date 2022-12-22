@@ -8,7 +8,7 @@ import { DapiRepository } from './model/dapi/dapi.respository';
 import { ConfigService, ConfigModule } from '@nestjs/config';
 import { FaucetRepository } from './model/faucet/faucet.respository';
 import * as phala from './phat.composer';
-import { DapiEntity, OracleInfo } from './model/dapi/dapi.entity';
+import { ChainType, DapiEntity, OracleInfo } from './model/dapi/dapi.entity';
 import { OracleRequest } from './model/Request';
 
 enum JobStatus {
@@ -64,17 +64,28 @@ export class DapiService {
       create_at: new Date(),
       update_at: new Date(),
     });
-    this.dapiRepository.save(entity);
-    return;
-    const sponsorMnemonic =
-      'aisle genuine false door mouse sustain caught flock pyramid sister scan disease';
-    await phala.deploydRuntime(
-      sponsorMnemonic,
-      this.configService.get('CLUSTER_ID'),
-      this.configService.get('CHAIN'),
-      this.configService.get('PRUNTIME'),
-      '/Users/songtianyi/workhub/github/phat-stateful-rollup/phat/artifacts/sample_oracle/sample_oracle.contract',
-      {},
-    );
+    entity = await this.dapiRepository.save(entity);
+    let sponsorMnemonic = this.configService.get('SPONSOR_MNEMONIC');
+    if (entity.oracleInfo.sourceChain.type == ChainType.PHALA) {
+      this.dapiRepository.updateStatus(
+        entity.id,
+        JobStatus.DEPOLYING_SAAS3_DRUNTIME,
+      );
+      entity.oracleInfo.address = await phala.deploydRuntime(
+        sponsorMnemonic,
+        entity.oracleInfo.sourceChain.clusterId,
+        entity.oracleInfo.sourceChain.wsProvider,
+        entity.oracleInfo.sourceChain.pruntime,
+        this.configService.get('DRUNTIME_FAT_PATH'),
+        {
+          target_chain_rpc: entity.oracleInfo.targetChain.httpProvider,
+          anchor_contract_addr: 'TODO',
+          web2_api_url_prefix: entity.oracleInfo.web2Info.uri,
+          api_key: '',
+        },
+      );
+      entity.status = JobStatus.DONE;
+      this.dapiRepository.update(entity);
+    }
   }
 }

@@ -63,6 +63,8 @@ export async function deploydRuntime(
   druntimePath: string,
   config: any,
 ) {
+  return 'TODO';
+
   // Create a keyring instance
   const keyring = new Keyring({ type: 'sr25519' });
 
@@ -96,7 +98,7 @@ export async function deploydRuntime(
   console.log('Connected worker:', connectedWorker);
 
   // contracts
-  const address = await deployContracts(
+  const address = await depolyFatContract(
     api,
     txqueue,
     sponsor,
@@ -152,11 +154,12 @@ export async function deploydRuntime(
   await blockBarrier(api, prpc);
 
   console.log('Deployment finished');
+  return address;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export async function deployContracts(
+export async function depolyFatContract(
   api,
   txqueue,
   account,
