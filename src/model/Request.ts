@@ -1,4 +1,5 @@
 import { ChainType } from '@api3/airnode-node';
+import { UserInfo } from 'os';
 import { ChainInfo, CreatorInfo, OracleInfo } from './dapi/dapi.entity';
 
 export class HttpRequest {

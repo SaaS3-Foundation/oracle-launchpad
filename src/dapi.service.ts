@@ -47,11 +47,6 @@ export class DapiService {
   }
 
   async submitV2(req: OracleRequest, jobId: string): Promise<any> {
-    // compile and depoly anchor
-    // TODO this is optional for future
-    //let artifact = phala.loadAnchorArtifact();
-    //await c_composer.deployWithWeb3(artifact.abi, artifact.bytecode);
-    // compile and deploy dRuntime
     let entity = new DapiEntity({
       id: jobId,
       oracleInfo: req.oracleInfo,
@@ -60,14 +55,27 @@ export class DapiService {
       create_at: new Date(),
       update_at: new Date(),
     });
-    entity = await this.dapiRepository.save(entity);
+
     let sponsorMnemonic = this.configService.get('SPONSOR_MNEMONIC');
+    if (entity.oracleInfo.targetChain.type == ChainType.EVM) {
+      let artifact = phala.loadAnchorArtifact(
+        this.configService.get('PHALA_ANCHOR_PATH'),
+      );
+      await phala.deployWithWeb3(
+        entity.oracleInfo.targetChain.httpProvider,
+        sponsorMnemonic,
+        artifact.abi,
+        artifact.bytecode,
+      );
+      // await phala.configAnchor();
+    }
+    entity = await this.dapiRepository.save(entity);
     if (entity.oracleInfo.sourceChain.type == ChainType.PHALA) {
       this.dapiRepository.updateStatus(
         entity.id,
         JobStatus.DEPOLYING_SAAS3_DRUNTIME,
       );
-      entity.oracleInfo.address = await phala.deploydRuntime(
+      entity.oracleInfo.address = await phala.deployFatContract(
         sponsorMnemonic,
         entity.oracleInfo.sourceChain.clusterId,
         entity.oracleInfo.sourceChain.wsProvider,

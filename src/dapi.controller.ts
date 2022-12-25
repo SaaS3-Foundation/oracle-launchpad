@@ -75,7 +75,7 @@ export class DapiController {
     }
     let entity = await this.dapiRepository.find(id);
     if (entity == null) {
-        return res.json({msg: 'resource not found', code: 404});
+      return res.json({ msg: 'resource not found', code: 404 });
     }
     await this.dapiRepository.deleteById(id);
     return res.json({ msg: 'OK', code: 200 });
@@ -88,7 +88,7 @@ export class DapiController {
     }
     let entity = await this.dapiRepository.find(id);
     if (entity == null) {
-      return res.json({msg: 'resource not found', code: 404});
+      return res.json({ msg: 'resource not found', code: 404 });
     }
     entity.update_at = new Date();
     await this.dapiRepository.update(entity);
@@ -102,8 +102,7 @@ export class DapiController {
     }
     let entity = await this.dapiRepository.find(id);
     if (entity == null) {
-      return res
-        .json({ msg: `entity ${id} not Found`, code: 404 });
+      return res.json({ msg: `entity ${id} not Found`, code: 404 });
     }
     return res.json({ msg: 'OK', code: 200, data: entity });
   }

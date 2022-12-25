@@ -6,6 +6,7 @@ import { ApiPromise, WsProvider, Keyring } from '@polkadot/api';
 import { ContractPromise } from '@polkadot/api-contract';
 import { typeDefinitions } from '@polkadot/types';
 import * as Phala from '@phala/sdk';
+import * as utils from './utils/oracle.utils';
 import {
   TxQueue,
   blockBarrier,
@@ -17,10 +18,9 @@ import { ConfigService } from '@nestjs/config';
 import { ethers } from 'ethers';
 import Web3 from 'web3';
 
-export function loaddRuntime(contractPath) {
+export function loadFatContract(contractPath: string) {
   const f = fs.readFileSync(contractPath);
   const contract = JSON.parse(f.toString());
-  console.log(contract);
   const constructor = contract.V3.spec.constructors.find(
     (c: any) => c.label === 'default',
   ).selector;
@@ -28,52 +28,82 @@ export function loaddRuntime(contractPath) {
   const { wasm } = contract.source;
   const { hash } = contract.source;
   return {
-    druntime: {
-      hash,
-      wasm,
-      contract,
-      constructor,
-      name,
-      address: '',
-    },
+    hash,
+    wasm,
+    contract,
+    constructor,
+    name,
+    address: '',
   };
 }
 
-export function loadAnchorArtifact() {
-  const artifactPath = join(
-    __dirname,
-    '../workspace/evm',
-    'artifacts/contracts',
-    'PhatRollupAnchor.sol',
-    'PhatRollupAnchor.json',
-  );
-  return require(artifactPath);
+export function loadAnchorArtifact(path: string) {
+  return require(path);
 }
 
-export const getUserWallet = (mnemonic: string, url: string) => {
-  const provider = new ethers.providers.JsonRpcProvider(url);
-  return ethers.Wallet.fromMnemonic(mnemonic).connect(provider);
-};
+export async function configFatContract(
+  api,
+  txqueue,
+  signer,
+  pruntimeUrl,
+  artifact,
+  name,
+  args,
+) {
+  // connect to pruntime
+  const prpc = Phala.createPruntimeApi(pruntimeUrl);
+  const connectedWorker = hex((await prpc.getInfo({})).publicKey);
+  console.log('Connected worker:', connectedWorker);
 
-export async function deploydRuntime(
+  const newApi = await api.clone().isReady;
+  console.log(newApi);
+  const t = await Phala.create({
+    api: newApi,
+    baseURL: pruntimeUrl,
+    contractId: artifact.address,
+    autoDeposit: true,
+  });
+  console.log(t);
+  let contract = new ContractPromise(
+    t.api,
+    artifact.contract,
+    artifact.address,
+  );
+  console.log('Fat Contract: connected', contract);
+
+  // set up the contracts
+  await txqueue.submit(
+    // target_chain_rpc: Option<String>,
+    // anchor_contract_addr: Option<H160>,
+    // web2_api_url_prefix: Option<String>,
+    // api_key: Option<String>,
+    contract.api.tx.call(name, args),
+    signer,
+    true,
+  );
+
+  // wait for the worker to sync to the bockchain
+  await blockBarrier(api, prpc);
+
+  console.log('Config finished');
+}
+
+export async function deployFatContract(
   mnemonic: string,
   clusterId: string,
   chainUrl: string,
   pruntimeUrl: string,
-  druntimePath: string,
+  contractPath: string,
   config: any,
 ) {
-  return 'TODO';
-
   // Create a keyring instance
   const keyring = new Keyring({ type: 'sr25519' });
 
   // Prepare accounts
   const sponsor = keyring.addFromUri(mnemonic);
 
-  const artifacts = loaddRuntime(druntimePath);
+  const artifact = loadFatContract(contractPath);
 
-  console.log(chainUrl);
   // connect to the chain
   const wsProvider = new WsProvider(chainUrl);
   console.log(wsProvider);
@@ -98,59 +128,33 @@ export async function deploydRuntime(
   console.log('Connected worker:', connectedWorker);
 
   // contracts
-  const address = await depolyFatContract(
+  const address = await submit(
     api,
     txqueue,
     sponsor,
     cert,
-    artifacts,
+    artifact,
     clusterId,
     '',
   );
-  //const address = '0xcb22a0c52a35981f73e16930b90709ce76441b9b310599258c500856c832aed0';
-  artifacts.druntime.address = address;
+  artifact.address = address;
   console.log(address);
 
-  // create Fat Contract objects
-  // todo This line prevents errors.
-  let contracts: any = {};
-
-  for (const [name, contract] of Object.entries(artifacts)) {
-    const contractId = contract.address;
-    console.log(api);
-    const newApi = await api.clone().isReady;
-    console.log(newApi);
-    const t = await Phala.create({
-      api: newApi,
-      baseURL: pruntimeUrl,
-      contractId,
-      autoDeposit: true,
-    });
-    console.log(t);
-    console.log(name);
-    contracts[name] = new ContractPromise(t.api, contract.contract, contractId);
-  }
-  console.log('Fat Contract: connected', contracts);
-  const druntime = contracts.druntime;
-
-  // set up the contracts
-  await txqueue.submit(
-    // target_chain_rpc: Option<String>,
-    // anchor_contract_addr: Option<H160>,
-    // web2_api_url_prefix: Option<String>,
-    // api_key: Option<String>,
-    druntime.api.tx.config(
-      {},
+  await configFatContract(
+    api,
+    txqueue,
+    sponsor,
+    pruntimeUrl,
+    artifact,
+    'config',
+    [
       config.target_chain_rpc, // saas3 protocol rpc
       config.anchor_contract_addr,
       config.web2_api_url_prefix,
       config.api_key,
-    ),
-    sponsor,
-    true,
+    ],
   );
 
-  // wait for the worker to sync to the bockchain
   await blockBarrier(api, prpc);
 
   console.log('Deployment finished');
@@ -159,25 +163,24 @@ export async function deploydRuntime(
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export async function depolyFatContract(
+export async function submit(
   api,
   txqueue,
   account,
   cert,
-  artifacts,
+  artifact,
   clusterId,
   salt,
 ) {
   salt = salt || hex(crypto.randomBytes(4));
-  console.log('Contracts: uploading', artifacts.druntime.name);
+  console.log('Contracts: uploading', artifact.name);
 
-  const { druntime } = artifacts;
   // upload the contract
   await txqueue.submit(
     api.tx.phalaFatContracts.clusterUploadResource(
       clusterId,
       'InkCode',
-      druntime.wasm,
+      artifact.wasm,
     ),
     account,
   );
@@ -187,13 +190,13 @@ export async function depolyFatContract(
     'Waiting the code to be synced into pruntime to estmate the instantiation',
   );
   await sleep(10000);
-  console.log(`Contracts: ${druntime.name} uploaded`);
+  console.log(`Contracts: ${artifact.name} uploaded`);
 
-  console.log('Contracts: instantiating', druntime.name);
+  console.log('Contracts: instantiating', artifact.name);
   const { events: deployEvents } = await txqueue.submit(
     api.tx.phalaFatContracts.instantiateContract(
-      { WasmCode: druntime.hash },
-      druntime.constructor,
+      { WasmCode: artifact.hash },
+      artifact.constructor,
       salt,
       clusterId,
       0,
@@ -235,7 +238,7 @@ export async function depolyFatContract(
     `${contractIds.length} vs ${numContracts}`,
   );
   // eslint-disable-next-line prefer-destructuring
-  druntime.address = contractIds[0];
+  artifact.address = contractIds[0];
 
   await checkUntilEq(
     async () =>
@@ -247,5 +250,37 @@ export async function depolyFatContract(
   );
 
   console.log('Contracts: deployed');
-  return druntime.address;
+  return artifact.address;
+}
+
+export async function deployWithWeb3(
+  provider: string,
+  sponsorMnemonic: string,
+  abi: any,
+  bytecode: any,
+) {
+  const web3 = new Web3(provider);
+  let prikey = utils.getUserWallet(sponsorMnemonic, provider).privateKey;
+  const accountFrom = {
+    privateKey: prikey,
+  };
+  let signer = web3.eth.accounts.privateKeyToAccount(prikey);
+  web3.eth.accounts.wallet.add(signer);
+
+  const incrementer = new web3.eth.Contract(abi);
+  const incrementerTx = incrementer.deploy({
+    data: bytecode,
+    arguments: [],
+  });
+  const tx = await web3.eth.accounts.signTransaction(
+    {
+      data: incrementerTx.encodeABI(),
+      gas: await incrementerTx.estimateGas(),
+      //gasPrice: web3.utils.toWei('1000', 'gwei'),
+    },
+    accountFrom.privateKey,
+  );
+  const receipt = await web3.eth.sendSignedTransaction(tx.rawTransaction);
+  console.log(`Contract deployed at address: ${receipt.contractAddress}`);
+  return { address: receipt.contractAddress, abi: abi };
 }
