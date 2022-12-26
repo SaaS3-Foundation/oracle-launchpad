@@ -1,24 +1,11 @@
-import { contracts } from '@api3/airnode-node/dist/src/evm';
-import { OIS } from '@api3/ois';
-import { Injectable, SerializeOptions } from '@nestjs/common';
-import { existsSync, mkdirSync } from 'fs';
-import { interval, map, Observable } from 'rxjs';
-import { EventsGateway } from './events.gateway';
-import { DapiRepository } from './model/dapi/dapi.respository';
-import { ConfigService, ConfigModule } from '@nestjs/config';
-import { FaucetRepository } from './model/faucet/faucet.respository';
-import * as phala from './phat.composer';
-import {
-  ChainType,
-  DapiEntity,
-  JobStatus,
-  OracleInfo,
-} from './model/dapi/dapi.entity';
-import { OracleRequest } from './model/Request';
-
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+import { Injectable } from '@nestjs/common';
+import { EventsGateway } from '../events.gateway';
+import { DapiRepository } from '../model/dapi/dapi.respository';
+import { ConfigService } from '@nestjs/config';
+import { FaucetRepository } from '../model/faucet/faucet.respository';
+import * as phala from '../phat.composer';
+import { ChainType, DapiEntity, JobStatus } from '../model/dapi/dapi.entity';
+import { OracleRequest } from '../model/Request';
 
 @Injectable()
 export class DapiService {
@@ -56,9 +43,9 @@ export class DapiService {
       update_at: new Date(),
     });
 
-    let sponsorMnemonic = this.configService.get('SPONSOR_MNEMONIC');
+    const sponsorMnemonic = this.configService.get('SPONSOR_MNEMONIC');
     if (entity.oracleInfo.targetChain.type == ChainType.EVM) {
-      let artifact = phala.loadAnchorArtifact(
+      const artifact = phala.loadAnchorArtifact(
         this.configService.get('PHALA_ANCHOR_PATH'),
       );
       await phala.deployWithWeb3(

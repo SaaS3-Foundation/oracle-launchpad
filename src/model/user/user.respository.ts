@@ -12,7 +12,7 @@ export class UserRepository {
   ) {}
 
   async page(index: number, size: number): Promise<any> {
-    let data = await this.dataSource
+    const data = await this.dataSource
       .getRepository(UserEntity)
       .createQueryBuilder('user')
       .orderBy('user.create_at', 'DESC')
@@ -20,7 +20,7 @@ export class UserRepository {
       .skip((index - 1) * size)
       .getMany();
 
-    let count = await this.dataSource
+    const count = await this.dataSource
       .getRepository(UserEntity)
       .createQueryBuilder('user')
       .getCount();
@@ -49,6 +49,10 @@ export class UserRepository {
       .createQueryBuilder('user')
       .where({ id: id })
       .getOne();
+  }
+
+  findByAddress(userAddress: string): Promise<UserEntity> {
+    return this.repo.findOneBy({ userAddress });
   }
 
   async update(entity: UserEntity): Promise<any> {

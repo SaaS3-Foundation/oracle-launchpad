@@ -12,7 +12,7 @@ export class DapiRepository {
   ) {}
 
   async page(index: number, size: number): Promise<any> {
-    let data = await this.dataSource
+    const data = await this.dataSource
       .getRepository(DapiEntity)
       .createQueryBuilder('dapi')
       .where({ status: JobStatus.DONE })
@@ -21,7 +21,7 @@ export class DapiRepository {
       .skip((index - 1) * size)
       .getMany();
 
-    let count = await this.dataSource
+    const count = await this.dataSource
       .getRepository(DapiEntity)
       .createQueryBuilder('dapi')
       .where({ status: 9 })
@@ -63,7 +63,7 @@ export class DapiRepository {
   }
 
   async updateStatus(id: string, status: number) {
-    let res = await this.dataSource
+    const res = await this.dataSource
       .getRepository(DapiEntity)
       .update({ id: id }, { status: status, update_at: new Date() });
     if (res.affected) {

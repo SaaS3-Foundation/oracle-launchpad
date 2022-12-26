@@ -9,10 +9,10 @@ import {
   Put,
   Param,
 } from '@nestjs/common';
-import { UserService } from './user.service';
+import { UserService } from '../service/user.service';
 import { nanoid } from 'nanoid';
-import { UserRepository } from './model/user/user.respository';
-import { UserEntity } from './model/user/user.entity';
+import { UserRepository } from '../model/user/user.respository';
+import { UserEntity } from '../model/user/user.entity';
 
 @Controller('/saas3/user')
 export class UserController {
@@ -21,13 +21,25 @@ export class UserController {
     private readonly userRepository: UserRepository,
   ) {}
 
-  @Post('/register')
-  async register(@Body() req: UserEntity, @Response() res) {
-    req.id = nanoid(10);
+  @Post('/register/:userAddress')
+  async register(@Param() params, @Body() req: UserEntity, @Response() res) {
+    const { userAddress } = params;
+    const user = await this.userRepository.findByAddress(userAddress);
+    if (user) {
+      return res.json({
+        msg: 'This address already exists.',
+        code: 500,
+        data: user,
+      });
+    }
     res.json({
       msg: 'OK',
       code: 200,
-      data: await this.userService.register(req),
+      data: await this.userService.register({
+        ...req,
+        id: nanoid(10),
+        userAddress,
+      }),
     });
   }
 
@@ -53,7 +65,7 @@ export class UserController {
     if (params.id === undefined) {
       return res.json({ msg: 'Invalid id', code: 400 });
     }
-    let entity = await this.userRepository.find(params.id);
+    const entity = await this.userRepository.find(params.id);
     if (entity == null) {
       return res.json({ msg: 'resource not found', code: 404 });
     }
@@ -66,7 +78,7 @@ export class UserController {
     if (params.id === undefined) {
       return res.json({ msg: 'id not defined', code: 400 });
     }
-    let entity = await this.userRepository.find(params.id);
+    const entity = await this.userRepository.find(params.id);
     if (entity == null) {
       return res.json({ msg: 'resource not found', code: 404 });
     }
@@ -76,14 +88,15 @@ export class UserController {
     res.json({ msg: 'OK', code: 200 });
   }
 
-  @Get('/detail/:id')
+  @Get('/detail/:userAddress')
   async detail(@Param() params, @Response() res) {
-    if (params.id === undefined) {
-      return res.json({ msg: 'Invalid input', code: 400 });
-    }
-    let entity = await this.userRepository.find(params.id);
-    if (entity == null) {
-      return res.json({ msg: `entity ${params.id} not Found`, code: 404 });
+    const { userAddress } = params;
+    const entity = await this.userRepository.findByAddress(userAddress);
+    if (!entity) {
+      return res.json({
+        msg: `entity ${userAddress} not Found`,
+        code: 404,
+      });
     }
     return res.json({ msg: 'OK', code: 200, data: entity });
   }

@@ -24,3 +24,7 @@ export const getUserWallet = (mnemonic: string, url: string) => {
   const provider = new ethers.providers.JsonRpcProvider(url);
   return ethers.Wallet.fromMnemonic(mnemonic).connect(provider);
 };
+
+export function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}

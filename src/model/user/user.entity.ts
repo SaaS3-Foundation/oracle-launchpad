@@ -10,6 +10,7 @@ import { ChainInfo } from '../dapi/dapi.entity';
 
 export class Profile {
   name: string;
+  avatar: string;
   description: string;
   email: string;
   twitter: string;
@@ -30,6 +31,9 @@ export class UserEntity {
 
   @PrimaryColumn()
   id: string;
+
+  @Column({ type: 'varchar', length: 200 })
+  userAddress: string;
 
   @Column({ type: 'jsonb', nullable: true })
   profile: Profile;

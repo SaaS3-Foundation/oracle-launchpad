@@ -9,15 +9,10 @@ import {
   Delete,
   Put,
 } from '@nestjs/common';
-import { DapiService } from './dapi.service';
+import { DapiService } from '../service/dapi.service';
 import { nanoid } from 'nanoid';
-import { interval, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { DapiRepository } from './model/dapi/dapi.respository';
-import { existsSync, rmdirSync } from 'fs';
-import { ok } from 'assert';
-import { execSync } from 'child_process';
-import { OracleRequest, HttpRequest } from './model/Request';
+import { DapiRepository } from '../model/dapi/dapi.respository';
+import { OracleRequest, HttpRequest } from '../model/Request';
 
 @Controller('/saas3/dapi')
 export class DapiController {
@@ -30,7 +25,7 @@ export class DapiController {
   @Post('/submit/v2')
   async submitV2(@Body() req: OracleRequest, @Response() res) {
     const jobId = nanoid(10);
-    let c = await this.dapiService.checkOpenapi(req);
+    const c = await this.dapiService.checkOpenapi(req);
     if (c.ok === false) {
       return res.status(HttpStatus.BAD_REQUEST).json({ msg: c.err, code: 400 });
     }
@@ -40,7 +35,7 @@ export class DapiController {
 
   @Get('/status')
   async getStatusBy(@Query('id') id: string, @Response() res) {
-    let job = await this.dapiRepository.find(id);
+    const job = await this.dapiRepository.find(id);
     if (job == null) {
       return res.json({ msg: 'Not Found', code: 404 });
     }
@@ -73,7 +68,7 @@ export class DapiController {
     if (id === undefined) {
       return res.json({ msg: 'Invalid input', code: 400 });
     }
-    let entity = await this.dapiRepository.find(id);
+    const entity = await this.dapiRepository.find(id);
     if (entity == null) {
       return res.json({ msg: 'resource not found', code: 404 });
     }
@@ -86,7 +81,7 @@ export class DapiController {
     if (id === undefined) {
       return res.json({ msg: 'id not defined', code: 400 });
     }
-    let entity = await this.dapiRepository.find(id);
+    const entity = await this.dapiRepository.find(id);
     if (entity == null) {
       return res.json({ msg: 'resource not found', code: 404 });
     }
@@ -100,7 +95,7 @@ export class DapiController {
     if (id === undefined) {
       return res.json({ msg: 'Invalid input', code: 400 });
     }
-    let entity = await this.dapiRepository.find(id);
+    const entity = await this.dapiRepository.find(id);
     if (entity == null) {
       return res.json({ msg: `entity ${id} not Found`, code: 404 });
     }
@@ -126,7 +121,7 @@ export class DapiController {
   @Post('/testrun')
   async testrun(@Body() body: HttpRequest, @Response() res) {
     console.log(body);
-    let r = await this.dotest(body);
+    const r = await this.dotest(body);
     if (r.ok == true) {
       res.json({ msg: 'OK', code: 200, data: r.data });
     } else {
