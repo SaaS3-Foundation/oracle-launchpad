@@ -51,10 +51,6 @@ export class UserRepository {
       .getOne();
   }
 
-  findByAddress(userAddress: string): Promise<UserEntity> {
-    return this.repo.findOneBy({ userAddress });
-  }
-
   async update(entity: UserEntity): Promise<any> {
     entity.update_at = new Date();
     return this.repo.update({ id: entity.id }, entity);

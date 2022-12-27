@@ -13,6 +13,7 @@ export function verifyMessage(
     );
     return userAddress === address;
   } catch (error) {
+    console.log('verify sign error', error);
     return false;
   }
 }

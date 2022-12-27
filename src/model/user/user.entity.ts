@@ -18,6 +18,11 @@ export class Profile {
   telegram: string;
 }
 
+export enum WalletStatus {
+  READY,
+  WAITTING_APPROVAL,
+}
+
 export class WalletInfo {
   chain: ChainInfo;
   address: string;
@@ -31,9 +36,6 @@ export class UserEntity {
 
   @PrimaryColumn()
   id: string;
-
-  @Column({ type: 'varchar', length: 200 })
-  userAddress: string;
 
   @Column({ type: 'jsonb', nullable: true })
   profile: Profile;

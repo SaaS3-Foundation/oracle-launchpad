@@ -10,7 +10,12 @@ export class UserService {
     private readonly configService: ConfigService,
   ) {}
 
-  register(user: UserEntity): Promise<UserEntity> {
-    return this.userRepository.save(user);
+  async findByAddress(address: string): Promise<UserEntity> {
+    const users = await this.userRepository.findAll();
+    return users.find(
+      (user) =>
+        user.walletInfo != null &&
+        user.walletInfo.find((v) => v.address == address) != undefined,
+    );
   }
 }

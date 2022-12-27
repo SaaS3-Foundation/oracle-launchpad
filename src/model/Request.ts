@@ -14,3 +14,10 @@ export class OracleRequest {
   oracleInfo: OracleInfo;
   creatorInfo: CreatorInfo;
 }
+
+export class WalletRequest {
+  address: string;
+  signature: string;
+  nonce: string;
+  chain: ChainInfo;
+}
