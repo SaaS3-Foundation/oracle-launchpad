@@ -8,11 +8,13 @@ import {
   Delete,
   Put,
   Param,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from '../service/user.service';
 import { nanoid } from 'nanoid';
 import { UserRepository } from '../model/user/user.respository';
 import { UserEntity } from '../model/user/user.entity';
+import { AuthInterceptor } from 'src/common/interceptor/auth.interceptor';
 
 @Controller('/saas3/user')
 export class UserController {
@@ -74,6 +76,7 @@ export class UserController {
   }
 
   @Put('/update/:id')
+  @UseInterceptors(AuthInterceptor)
   async update(@Param() params, @Body() u: UserEntity, @Response() res) {
     if (params.id === undefined) {
       return res.json({ msg: 'id not defined', code: 400 });
