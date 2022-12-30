@@ -1,4 +1,3 @@
-import { RequestMethod } from '@nestjs/common';
 import {
   PrimaryColumn,
   Entity,
@@ -17,12 +16,6 @@ export class Profile {
   github: string;
   telegram: string;
 }
-
-export enum WalletStatus {
-  READY,
-  WAITTING_APPROVAL,
-}
-
 export class WalletInfo {
   chain: ChainInfo;
   address: string;
