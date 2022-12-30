@@ -46,7 +46,7 @@ export class UserRepository {
   async find(id: string): Promise<UserEntity> {
     return this.repo
       .createQueryBuilder('user')
-      .where({ 'user.id': id })
+      .where({ id })
       .leftJoinAndSelect('user.oracles', 'oracles')
       .getOne();
   }

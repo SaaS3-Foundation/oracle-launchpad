@@ -55,6 +55,8 @@ export class DapiController {
       create_at: new Date(),
       update_at: new Date(),
     };
+    console.log(entity, 'entity');
+
     const c = await this.dapiService.checkOpenapi(entity);
     if (!c.ok) {
       return res.json({ msg: c.err, code: 400 });
