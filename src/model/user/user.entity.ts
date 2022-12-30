@@ -5,8 +5,9 @@ import {
   Column,
   UpdateDateColumn,
   CreateDateColumn,
+  OneToMany,
 } from 'typeorm';
-import { ChainInfo } from '../dapi/dapi.entity';
+import { ChainInfo, DapiEntity } from '../dapi/dapi.entity';
 
 export class Profile {
   name: string;
@@ -43,8 +44,9 @@ export class UserEntity {
   @Column({ type: 'jsonb', nullable: true })
   walletInfo: WalletInfo[];
 
-  @Column({ type: 'jsonb', nullable: true })
-  oracles: string[];
+  // @Column({ type: 'jsonb', nullable: true })
+  @OneToMany(() => DapiEntity, (dapi) => dapi.creator)
+  oracles: DapiEntity[];
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   create_at: Date;

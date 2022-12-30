@@ -37,12 +37,8 @@ export class UserController {
         data: existUser,
       });
     }
-    let user = req;
-    if (
-      user.walletInfo === undefined ||
-      user.walletInfo == null ||
-      user.walletInfo.length == 0
-    ) {
+    const user = req;
+    if (!user.walletInfo?.length) {
       return res.json({
         msg: 'No wallet info.',
         code: 400,
@@ -113,7 +109,7 @@ export class UserController {
     u.oracles = entity.oracles;
     // in case id missing
     u.id = params.id;
-    let n = await this.userRepository.update(u);
+    const n = await this.userRepository.update(u);
     res.json({ msg: 'OK', code: 200, data: n });
   }
 
@@ -127,7 +123,7 @@ export class UserController {
     if (entity == null) {
       return res.json({ msg: 'resource not found', code: 404 });
     }
-    let f = entity.walletInfo.find((wa) => wa.address == w.address);
+    const f = entity.walletInfo.find((wa) => wa.address == w.address);
     if (f !== undefined) {
       // do nothing
       return entity;
@@ -135,7 +131,7 @@ export class UserController {
     if (verifyMessage(w.address, w.nonce, w.signature)) {
       entity.walletInfo.push({ chain: w.chain, address: w.address });
     }
-    let nu = await this.userRepository.update(entity);
+    const nu = await this.userRepository.update(entity);
     return res.json({ msg: 'OK', code: 200, data: nu });
   }
 

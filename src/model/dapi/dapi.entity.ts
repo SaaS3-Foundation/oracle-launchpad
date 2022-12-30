@@ -5,7 +5,11 @@ import {
   Column,
   UpdateDateColumn,
   CreateDateColumn,
+  OneToOne,
+  JoinColumn,
+  ManyToOne,
 } from 'typeorm';
+import { UserEntity } from '../user/user.entity';
 
 export enum JobStatus {
   PENDING = 0, // 0%
@@ -78,8 +82,8 @@ export class DapiEntity {
   @Column({ type: 'jsonb', nullable: true })
   oracleInfo: OracleInfo;
 
-  @Column({ type: 'jsonb', nullable: true })
-  creatorInfo: CreatorInfo;
+  @Column({ type: 'text', nullable: true })
+  creatorNote: string;
 
   @Column({ type: 'numeric' })
   status: number;
@@ -87,8 +91,15 @@ export class DapiEntity {
   @Column({ type: 'numeric', nullable: true })
   visibility: Visibility;
 
-  @Column({ type: String, nullable: true })
+  @Column({ type: 'varchar', length: 300 })
   logo_url: string;
+
+  // @Column({ type: 'varchar', length: 200 })
+  // creator_id: string;
+
+  @ManyToOne(() => UserEntity, { nullable: true })
+  @JoinColumn({ name: 'creator_id' })
+  creator: UserEntity;
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   create_at: Date;

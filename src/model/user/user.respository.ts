@@ -36,7 +36,7 @@ export class UserRepository {
   }
 
   async findAll(): Promise<UserEntity[]> {
-    return this.repo.find();
+    return this.repo.find({ relations: ['oracles'] });
   }
 
   async count(): Promise<number> {
@@ -44,10 +44,10 @@ export class UserRepository {
   }
 
   async find(id: string): Promise<UserEntity> {
-    return this.dataSource
-      .getRepository(UserEntity)
+    return this.repo
       .createQueryBuilder('user')
-      .where({ id: id })
+      .where({ 'user.id': id })
+      .leftJoinAndSelect('user.oracles', 'oracles')
       .getOne();
   }
 

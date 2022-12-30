@@ -33,50 +33,41 @@ export class DapiService {
     return { ok: true };
   }
 
-  async submitV2(req: OracleRequest, jobId: string): Promise<any> {
-    let entity = new DapiEntity({
-      id: jobId,
-      oracleInfo: req.oracleInfo,
-      creatorInfo: req.creatorInfo,
-      status: JobStatus.PENDING,
-      create_at: new Date(),
-      update_at: new Date(),
-    });
-
+  async submitV2(_entity: DapiEntity): Promise<any> {
     const sponsorMnemonic = this.configService.get('SPONSOR_MNEMONIC');
-    if (entity.oracleInfo.targetChain.type == ChainType.EVM) {
+    if (_entity.oracleInfo.targetChain.type == ChainType.EVM) {
       const artifact = phala.loadAnchorArtifact(
         this.configService.get('PHALA_ANCHOR_PATH'),
       );
       await phala.deployWithWeb3(
-        entity.oracleInfo.targetChain.httpProvider,
+        _entity.oracleInfo.targetChain.httpProvider,
         sponsorMnemonic,
         artifact.abi,
         artifact.bytecode,
       );
       // await phala.configAnchor();
     }
-    entity = await this.dapiRepository.save(entity);
-    if (entity.oracleInfo.sourceChain.type == ChainType.PHALA) {
+    await this.dapiRepository.save(_entity);
+    if (_entity.oracleInfo.sourceChain.type == ChainType.PHALA) {
       this.dapiRepository.updateStatus(
-        entity.id,
+        _entity.id,
         JobStatus.DEPOLYING_SAAS3_DRUNTIME,
       );
-      entity.oracleInfo.address = await phala.deployFatContract(
+      _entity.oracleInfo.address = await phala.deployFatContract(
         sponsorMnemonic,
-        entity.oracleInfo.sourceChain.clusterId,
-        entity.oracleInfo.sourceChain.wsProvider,
-        entity.oracleInfo.sourceChain.pruntime,
+        _entity.oracleInfo.sourceChain.clusterId,
+        _entity.oracleInfo.sourceChain.wsProvider,
+        _entity.oracleInfo.sourceChain.pruntime,
         this.configService.get('DRUNTIME_FAT_PATH'),
         {
-          target_chain_rpc: entity.oracleInfo.targetChain.httpProvider,
+          target_chain_rpc: _entity.oracleInfo.targetChain.httpProvider,
           anchor_contract_addr: 'TODO',
-          web2_api_url_prefix: entity.oracleInfo.web2Info.uri,
+          web2_api_url_prefix: _entity.oracleInfo.web2Info.uri,
           api_key: '',
         },
       );
-      entity.status = JobStatus.DONE;
-      this.dapiRepository.update(entity);
+      _entity.status = JobStatus.DONE;
+      await this.dapiRepository.update(_entity);
     }
   }
 }

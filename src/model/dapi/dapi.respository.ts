@@ -1,5 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
+import { UserEntity } from '../user/user.entity';
 import { DapiEntity, JobStatus } from './dapi.entity';
 
 @Injectable()
@@ -7,24 +9,26 @@ export class DapiRepository {
   constructor(
     @Inject('DAPI_REPOSITORY')
     private readonly repo: Repository<DapiEntity>,
+    // @InjectRepository(UserEntity)
+    // private readonly userRepository: Repository<UserEntity>,
     @Inject('PG_SOURCE')
     private dataSource: DataSource,
   ) {}
 
   async page(index: number, size: number): Promise<any> {
-    const data = await this.dataSource
-      .getRepository(DapiEntity)
-      .createQueryBuilder('dapi')
+    const queryBuilder = this.repo.createQueryBuilder('dapi');
+
+    const data = await queryBuilder
       .where({ status: JobStatus.DONE })
+      .leftJoinAndSelect('dapi.creator', 'creator')
+      .addSelect('creator')
       .orderBy('dapi.create_at', 'DESC')
       .take(size)
       .skip((index - 1) * size)
       .getMany();
 
-    const count = await this.dataSource
-      .getRepository(DapiEntity)
-      .createQueryBuilder('dapi')
-      .where({ status: 9 })
+    const count = await queryBuilder
+      .where({ status: JobStatus.DONE })
       .getCount();
 
     return {
@@ -46,10 +50,11 @@ export class DapiRepository {
   }
 
   async find(id: string): Promise<DapiEntity> {
-    return this.dataSource
-      .getRepository(DapiEntity)
+    return this.repo
       .createQueryBuilder('dapi')
       .where({ id: id })
+      .leftJoinAndSelect('dapi.creator', 'creator')
+      .addSelect('creator')
       .getOne();
   }
 

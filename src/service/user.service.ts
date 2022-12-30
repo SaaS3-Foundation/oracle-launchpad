@@ -14,8 +14,7 @@ export class UserService {
     const users = await this.userRepository.findAll();
     return users.find(
       (user) =>
-        user.walletInfo != null &&
-        user.walletInfo.find((v) => v.address == address) != undefined,
+        user.walletInfo && user.walletInfo.find((v) => v.address == address),
     );
   }
 }

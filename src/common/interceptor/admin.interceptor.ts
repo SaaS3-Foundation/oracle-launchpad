@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AdminInterceptor implements NestInterceptor {
-  private readonly configService: ConfigService;
+  constructor(private readonly configService: ConfigService) {}
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const host = context.switchToHttp();
     const response = host.getResponse<any>();

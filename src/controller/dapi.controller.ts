@@ -4,39 +4,77 @@ import {
   Post,
   Response,
   Get,
-  HttpStatus,
   Query,
   Delete,
   Put,
+  Param,
+  UseInterceptors,
 } from '@nestjs/common';
 import { DapiService } from '../service/dapi.service';
 import { nanoid } from 'nanoid';
 import { DapiRepository } from '../model/dapi/dapi.respository';
-import { OracleRequest, HttpRequest } from '../model/Request';
+import { HttpRequest } from '../model/Request';
+import { AuthInterceptor } from 'src/common/interceptor/auth.interceptor';
+import { UserRepository } from 'src/model/user/user.respository';
+import { ConfigService } from '@nestjs/config';
+import { DapiEntity, JobStatus } from 'src/model/dapi/dapi.entity';
+import { UserEntity } from 'src/model/user/user.entity';
 
 @Controller('/saas3/dapi')
 export class DapiController {
   constructor(
+    private readonly userRepository: UserRepository,
     private readonly dapiService: DapiService,
     private readonly dapiRepository: DapiRepository,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    console.log(this.configService, this.configService.get('mode'));
+  }
   private created: string[] = [];
 
-  @Post('/submit/v2')
-  async submitV2(@Body() req: OracleRequest, @Response() res) {
-    const jobId = nanoid(10);
-    const c = await this.dapiService.checkOpenapi(req);
-    if (c.ok === false) {
-      return res.status(HttpStatus.BAD_REQUEST).json({ msg: c.err, code: 400 });
+  @Post('/submit/v2/:id')
+  @UseInterceptors(AuthInterceptor)
+  async submitV2(@Param() params, @Body() body: DapiEntity, @Response() res) {
+    const { id } = params;
+    const user = await this.userRepository.find(id);
+    if (!user) {
+      return res.json({ msg: 'user is not exists', code: 400 });
     }
-    res.json({ msg: 'OK', code: 200, data: { job: jobId } });
-    this.dapiService.submitV2(req, jobId);
+    const jobId = nanoid(10);
+    const entity: DapiEntity = {
+      ...body,
+      id: jobId,
+      creator: new UserEntity({
+        id,
+      }),
+      status:
+        this.configService.get('NODE_ENV') === 'development'
+          ? JobStatus.DONE
+          : JobStatus.PENDING,
+      logo_url: '/',
+      create_at: new Date(),
+      update_at: new Date(),
+    };
+    const c = await this.dapiService.checkOpenapi(entity);
+    if (!c.ok) {
+      return res.json({ msg: c.err, code: 400 });
+    }
+    try {
+      if (this.configService.get('NODE_ENV') === 'development') {
+        await this.dapiRepository.save(entity);
+      } else {
+        await this.dapiService.submitV2(entity);
+      }
+      return res.json({ msg: 'OK', code: 200, data: { job: jobId } });
+    } catch (error) {
+      res.json({ msg: 'Failed to deploy oracle', code: 500 });
+    }
   }
 
   @Get('/status')
   async getStatusBy(@Query('id') id: string, @Response() res) {
     const job = await this.dapiRepository.find(id);
-    if (job == null) {
+    if (!job) {
       return res.json({ msg: 'Not Found', code: 404 });
     }
     return res.json({
@@ -52,12 +90,14 @@ export class DapiController {
     @Query('size') size: number,
     @Response() res,
   ) {
-    if (size === undefined || size < 1 || page === undefined || page < 1) {
+    const nsize = Number(size);
+    const npage = Number(page);
+    if (!nsize || !npage) {
       this.dapiRepository.findAll().then((ret) => {
         res.json({ msg: 'OK', code: 200, data: ret });
       });
     } else {
-      this.dapiRepository.page(page, size).then((ret) => {
+      this.dapiRepository.page(npage, nsize).then((ret) => {
         res.json({ msg: 'OK', code: 200, data: ret });
       });
     }
