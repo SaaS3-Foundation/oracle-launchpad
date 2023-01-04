@@ -39,20 +39,27 @@ export class UserRepository {
     return this.repo.find({ relations: ['oracles'] });
   }
 
-  async count(): Promise<number> {
+  count() {
     return this.repo.count();
   }
 
-  async find(id: string): Promise<UserEntity> {
-    return this.repo
-      .createQueryBuilder('user')
-      .where({ id })
-      .leftJoinAndSelect('user.oracles', 'oracles')
-      .getOne();
+  findByAddress(address: string) {
+    return this.repo.findOne({
+      relations: ['wallets', 'dapis'],
+      where: {
+        wallets: { address },
+      },
+    });
+  }
+
+  find(id: string) {
+    return this.repo.findOne({
+      relations: ['dapis', 'wallets'],
+      where: { id },
+    });
   }
 
   async update(entity: UserEntity): Promise<any> {
-    entity.update_at = new Date();
     return this.repo.update({ id: entity.id }, entity);
   }
 

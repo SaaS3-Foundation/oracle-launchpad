@@ -1,6 +1,5 @@
 import { ethers } from 'ethers';
 import { SIGN_MESSAGE } from 'src/config/message';
-
 export function verifyMessage(
   userAddress: string,
   nonce: string,

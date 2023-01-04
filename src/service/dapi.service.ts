@@ -1,19 +1,26 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { EventsGateway } from '../events.gateway';
 import { DapiRepository } from '../model/dapi/dapi.respository';
 import { ConfigService } from '@nestjs/config';
-import { FaucetRepository } from '../model/faucet/faucet.respository';
 import * as phala from '../phat.composer';
-import { ChainType, DapiEntity, JobStatus } from '../model/dapi/dapi.entity';
-import { OracleRequest } from '../model/Request';
+import { DapiEntity } from '../model/dapi/dapi.entity';
+import { JobStatus } from 'src/model/dapi/types';
+import { ChainType } from 'src/model/chain/types';
+import { DataSource } from 'typeorm';
+import { ChainRepository } from 'src/model/chain/chain.respository';
+import { nanoid } from 'nanoid';
+import { Web2InfoEntity } from 'src/model/web2Info/web2Info.entity';
+import { OracleEntity } from 'src/model/oracle/oracle.entity';
 
 @Injectable()
 export class DapiService {
   public constructor(
     private readonly ws: EventsGateway,
     private readonly dapiRepository: DapiRepository,
+    private readonly chainRepo: ChainRepository,
     private readonly configService: ConfigService,
-    private readonly faucetRepository: FaucetRepository,
+    @Inject('PG_SOURCE')
+    private dataSource: DataSource,
   ) {}
 
   async emit(jobId: string, s: JobStatus) {
@@ -33,41 +40,60 @@ export class DapiService {
     return { ok: true };
   }
 
-  async submitV2(_entity: DapiEntity): Promise<any> {
+  async submitV2(dapi: DapiEntity): Promise<any> {
     const sponsorMnemonic = this.configService.get('SPONSOR_MNEMONIC');
-    if (_entity.oracleInfo.targetChain.type == ChainType.EVM) {
+    if (dapi.oracleInfo.targetChain.type == ChainType.EVM) {
       const artifact = phala.loadAnchorArtifact(
         this.configService.get('PHALA_ANCHOR_PATH'),
       );
       await phala.deployWithWeb3(
-        _entity.oracleInfo.targetChain.httpProvider,
+        dapi.oracleInfo.targetChain.httpProvider,
         sponsorMnemonic,
         artifact.abi,
         artifact.bytecode,
       );
       // await phala.configAnchor();
     }
-    await this.dapiRepository.save(_entity);
-    if (_entity.oracleInfo.sourceChain.type == ChainType.PHALA) {
+    await this.dapiRepository.save(dapi);
+    if (dapi.oracleInfo.sourceChain.type == ChainType.PHALA) {
       this.dapiRepository.updateStatus(
-        _entity.id,
+        dapi.id,
         JobStatus.DEPOLYING_SAAS3_DRUNTIME,
       );
-      _entity.oracleInfo.address = await phala.deployFatContract(
+      dapi.oracleInfo.address = await phala.deployFatContract(
         sponsorMnemonic,
-        _entity.oracleInfo.sourceChain.clusterId,
-        _entity.oracleInfo.sourceChain.wsProvider,
-        _entity.oracleInfo.sourceChain.pruntime,
+        dapi.oracleInfo.sourceChain.clusterId,
+        dapi.oracleInfo.sourceChain.wsProvider,
+        dapi.oracleInfo.sourceChain.pruntime,
         this.configService.get('DRUNTIME_FAT_PATH'),
         {
-          target_chain_rpc: _entity.oracleInfo.targetChain.httpProvider,
+          target_chain_rpc: dapi.oracleInfo.targetChain.httpProvider,
           anchor_contract_addr: 'TODO',
-          web2_api_url_prefix: _entity.oracleInfo.web2Info.uri,
+          web2_api_url_prefix: dapi.oracleInfo.web2Info.uri,
           api_key: '',
         },
       );
-      _entity.status = JobStatus.DONE;
-      await this.dapiRepository.update(_entity);
+      dapi.status = JobStatus.DONE;
+      await this.dapiRepository.update(dapi);
     }
+  }
+
+  save(entity: DapiEntity) {
+    return this.dataSource.transaction(async (manager) => {
+      const sourceChain = await this.chainRepo.findByChainId(
+        entity.oracleInfo.sourceChain.chainId,
+      );
+      const targetChain = await this.chainRepo.findByChainId(
+        entity.oracleInfo.targetChain.chainId,
+      );
+      if (!sourceChain || !targetChain) {
+        throw new Error('This chain is not supported.');
+      }
+      entity.oracleInfo.web2Info.id = nanoid();
+      entity.oracleInfo.id = nanoid();
+      await manager.insert(Web2InfoEntity, entity.oracleInfo.web2Info);
+      await manager.insert(OracleEntity, entity.oracleInfo);
+      await manager.insert(DapiEntity, entity);
+    });
   }
 }

@@ -64,7 +64,7 @@ export async function configFatContract(
     autoDeposit: true,
   });
   console.log(t);
-  let contract = new ContractPromise(
+  const contract = new ContractPromise(
     t.api,
     artifact.contract,
     artifact.address,
@@ -260,11 +260,11 @@ export async function deployWithWeb3(
   bytecode: any,
 ) {
   const web3 = new Web3(provider);
-  let prikey = utils.getUserWallet(sponsorMnemonic, provider).privateKey;
+  const prikey = utils.getUserWallet(sponsorMnemonic, provider).privateKey;
   const accountFrom = {
     privateKey: prikey,
   };
-  let signer = web3.eth.accounts.privateKeyToAccount(prikey);
+  const signer = web3.eth.accounts.privateKeyToAccount(prikey);
   web3.eth.accounts.wallet.add(signer);
 
   const incrementer = new web3.eth.Contract(abi);

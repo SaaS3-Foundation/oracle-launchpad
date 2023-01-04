@@ -10,14 +10,13 @@ import {
   Param,
   UseInterceptors,
 } from '@nestjs/common';
-import { UserService } from '../service/user.service';
-import { nanoid } from 'nanoid';
-import { UserRepository } from '../model/user/user.respository';
-import { UserEntity } from '../model/user/user.entity';
-import { AuthInterceptor } from '../common/interceptor/auth.interceptor';
-import { AdminInterceptor } from '../common/interceptor/admin.interceptor';
-import { WalletRequest } from 'src/model/Request';
+import { UserService } from '../../service/user.service';
+import { UserRepository } from '../../model/user/user.respository';
+import { UserEntity } from '../../model/user/user.entity';
+import { AuthInterceptor } from '../../common/interceptor/auth.interceptor';
+import { AdminInterceptor } from '../../common/interceptor/admin.interceptor';
 import { verifyMessage } from 'src/utils/utils';
+import { nanoid } from 'nanoid';
 
 @Controller('/saas3/user')
 export class UserController {
@@ -28,8 +27,8 @@ export class UserController {
 
   @Post('/login/:address')
   @UseInterceptors(AuthInterceptor)
-  async login(@Param() params, @Body() req: UserEntity, @Response() res) {
-    const existUser = await this.userService.findByAddress(params.address);
+  async login(@Param() params, @Body() body: UserEntity, @Response() res) {
+    const existUser = await this.userRepository.findByAddress(params.address);
     if (existUser) {
       return res.json({
         msg: 'This address already exists.',
@@ -37,28 +36,32 @@ export class UserController {
         data: existUser,
       });
     }
-    const user = req;
-    if (!user.walletInfo?.length) {
+    if (!body.wallets?.length) {
       return res.json({
         msg: 'No wallet info.',
         code: 400,
       });
     }
-    if (user.walletInfo.length > 1) {
+    if (body.wallets.length > 1) {
       return res.json({
         msg: 'Only 1 wallet address allowed when you first login',
         code: 400,
       });
     }
-
-    res.json({
-      msg: 'OK',
-      code: 200,
-      data: await this.userRepository.save({
-        ...req,
-        id: nanoid(10),
-      }),
-    });
+    body.id = nanoid();
+    try {
+      await this.userService.saveUser(body);
+      res.json({
+        msg: 'OK',
+        code: 200,
+        data: body,
+      });
+    } catch (error) {
+      return res.json({
+        msg: 'Failed to register.',
+        code: 400,
+      });
+    }
   }
 
   @Get('/admin/list')
@@ -95,27 +98,26 @@ export class UserController {
 
   @Put('/update/:id')
   @UseInterceptors(AuthInterceptor)
-  async update(@Param() params, @Body() u: UserEntity, @Response() res) {
+  async update(@Param() params, @Body() body: UserEntity, @Response() res) {
     if (params.id === undefined) {
       return res.json({ msg: 'id not defined', code: 400 });
     }
     const entity = await this.userRepository.find(params.id);
-    if (entity == null) {
+    if (!entity) {
       return res.json({ msg: 'resource not found', code: 404 });
     }
-    // except wallet info
-    u.walletInfo = entity.walletInfo;
-    // and oracles
-    u.oracles = entity.oracles;
-    // in case id missing
-    u.id = params.id;
-    const n = await this.userRepository.update(u);
-    res.json({ msg: 'OK', code: 200, data: n });
+    body.id = params.id;
+    try {
+      const n = await this.userRepository.update(body);
+      res.json({ msg: 'OK', code: 200, data: n });
+    } catch (error) {
+      res.json({ msg: 'Failed to update userinfo.', code: 500 });
+    }
   }
 
   @Post('/:id/wallet/add')
   @UseInterceptors(AuthInterceptor)
-  async addWallet(@Param() params, @Body() w: WalletRequest, @Response() res) {
+  async addWallet(@Param() params, @Body() body: any, @Response() res) {
     if (params.id === undefined) {
       return res.json({ msg: 'id not defined', code: 400 });
     }
@@ -123,13 +125,13 @@ export class UserController {
     if (entity == null) {
       return res.json({ msg: 'resource not found', code: 404 });
     }
-    const f = entity.walletInfo.find((wa) => wa.address == w.address);
+    const f = entity.wallets.find((wa) => wa.address == body.address);
     if (f !== undefined) {
       // do nothing
       return entity;
     }
-    if (verifyMessage(w.address, w.nonce, w.signature)) {
-      entity.walletInfo.push({ chain: w.chain, address: w.address });
+    if (verifyMessage(body.address, body.nonce, body.signature)) {
+      entity.wallets.push({ chain: body.chain, address: body.address });
     }
     const nu = await this.userRepository.update(entity);
     return res.json({ msg: 'OK', code: 200, data: nu });
@@ -139,7 +141,7 @@ export class UserController {
   @UseInterceptors(AdminInterceptor)
   async detail(@Param() params, @Response() res) {
     const { userAddress } = params;
-    const entity = await this.userService.findByAddress(userAddress);
+    const entity = await this.userRepository.findByAddress(userAddress);
     if (!entity) {
       return res.json({
         msg: `entity ${userAddress} not Found`,

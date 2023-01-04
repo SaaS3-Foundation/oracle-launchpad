@@ -1,35 +1,38 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { UserEntity } from '../user/user.entity';
-import { DapiEntity, JobStatus } from './dapi.entity';
+import { ChainRepository } from '../chain/chain.respository';
+// import { ChainRepository } from '../chain/chain.respository';
+import { DapiEntity } from './dapi.entity';
+import { JobStatus } from './types';
 
 @Injectable()
 export class DapiRepository {
   constructor(
     @Inject('DAPI_REPOSITORY')
-    private readonly repo: Repository<DapiEntity>,
-    // @InjectRepository(UserEntity)
-    // private readonly userRepository: Repository<UserEntity>,
+    private readonly dapiRepo: Repository<DapiEntity>,
     @Inject('PG_SOURCE')
     private dataSource: DataSource,
   ) {}
 
-  async page(index: number, size: number): Promise<any> {
-    const queryBuilder = this.repo.createQueryBuilder('dapi');
+  async page(index: number, size: number) {
+    const data = await this.dapiRepo.find({
+      relations: [
+        'creator',
+        'oracleInfo',
+        'oracleInfo.web2Info',
+        'oracleInfo.sourceChain',
+        'oracleInfo.targetChain',
+      ],
+      where: {
+        status: JobStatus.DONE,
+      },
+      take: size,
+      skip: (index - 1) * size,
+    });
 
-    const data = await queryBuilder
-      .where({ status: JobStatus.DONE })
-      .leftJoinAndSelect('dapi.creator', 'creator')
-      .addSelect('creator')
-      .orderBy('dapi.create_at', 'DESC')
-      .take(size)
-      .skip((index - 1) * size)
-      .getMany();
-
-    const count = await queryBuilder
-      .where({ status: JobStatus.DONE })
-      .getCount();
+    const count = await this.dapiRepo.count({
+      where: { status: JobStatus.DONE },
+    });
 
     return {
       size: size,
@@ -42,29 +45,35 @@ export class DapiRepository {
   }
 
   async findAll(): Promise<DapiEntity[]> {
-    return this.repo.find();
+    return this.dapiRepo.find();
   }
 
   async count(): Promise<number> {
-    return this.repo.count();
+    return this.dapiRepo.count();
   }
 
-  async find(id: string): Promise<DapiEntity> {
-    return this.repo
-      .createQueryBuilder('dapi')
-      .where({ id: id })
-      .leftJoinAndSelect('dapi.creator', 'creator')
-      .addSelect('creator')
-      .getOne();
+  find(id: string) {
+    return this.dapiRepo.findOne({
+      relations: [
+        'creator',
+        'oracleInfo',
+        'oracleInfo.web2Info',
+        'oracleInfo.sourceChain',
+        'oracleInfo.targetChain',
+      ],
+      where: {
+        id,
+      },
+    });
   }
 
   async update(entity: DapiEntity): Promise<any> {
     entity.update_at = new Date();
-    return this.repo.update({ id: entity.id }, entity);
+    return this.dapiRepo.update({ id: entity.id }, entity);
   }
 
   async save(entity: DapiEntity): Promise<DapiEntity> {
-    return this.repo.save(entity);
+    return this.dapiRepo.save(entity);
   }
 
   async updateStatus(id: string, status: number) {
@@ -79,6 +88,6 @@ export class DapiRepository {
   }
 
   async deleteById(id: string) {
-    return this.repo.delete({ id: id });
+    return this.dapiRepo.delete({ id: id });
   }
 }
