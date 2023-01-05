@@ -34,7 +34,7 @@ export class DapiController {
   @UseInterceptors(AuthInterceptor)
   async submitV2(@Param() params, @Body() body: DapiEntity, @Response() res) {
     const { userId } = params;
-    const user = await this.userRepository.find(userId);
+    const user = await this.userRepository.getOneById(userId);
     if (!user) {
       return res.json({ msg: 'user is not exists', code: 400 });
     }
@@ -87,11 +87,12 @@ export class DapiController {
   async list(
     @Query('page') page: number,
     @Query('size') size: number,
+    @Query('searchValue') searchValue: string,
     @Response() res,
   ) {
     const nsize = Number(size) || 20;
     const npage = Number(page) || 1;
-    this.dapiRepository.page(npage, nsize).then((ret) => {
+    this.dapiRepository.page(npage, nsize, searchValue).then((ret) => {
       res.json({ msg: 'OK', code: 200, data: ret });
     });
   }

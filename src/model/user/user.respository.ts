@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, FindManyOptions, Repository } from 'typeorm';
 import { UserEntity } from './user.entity';
 
 @Injectable()
@@ -10,6 +10,15 @@ export class UserRepository {
     @Inject('PG_SOURCE')
     private dataSource: DataSource,
   ) {}
+  private relations = [
+    'wallets',
+    'wallets.chain',
+    'dapis',
+    'dapis.oracleInfo',
+    'dapis.oracleInfo.targetChain',
+    'dapis.oracleInfo.sourceChain',
+    'dapis.oracleInfo.web2Info',
+  ];
 
   async page(index: number, size: number): Promise<any> {
     const data = await this.dataSource
@@ -35,28 +44,37 @@ export class UserRepository {
     };
   }
 
-  async findAll(): Promise<UserEntity[]> {
-    return this.repo.find({ relations: ['oracles'] });
+  _find(options: FindManyOptions<UserEntity>) {
+    return this.repo.find({
+      relations: this.relations,
+      ...options,
+    });
+  }
+  _findOne(options: FindManyOptions<UserEntity>) {
+    return this.repo.findOne({
+      relations: this.relations,
+      ...options,
+    });
+  }
+
+  findAll() {
+    return this.repo.find({ relations: ['dapis'] });
   }
 
   count() {
     return this.repo.count();
   }
 
-  findByAddress(address: string) {
-    return this.repo.findOne({
-      relations: ['wallets', 'dapis'],
+  getOneByAddress(address: string) {
+    return this._findOne({
       where: {
         wallets: { address },
       },
     });
   }
 
-  find(id: string) {
-    return this.repo.findOne({
-      relations: ['dapis', 'wallets'],
-      where: { id },
-    });
+  getOneById(id: string) {
+    return this._findOne({ where: { id } });
   }
 
   async update(entity: UserEntity): Promise<any> {

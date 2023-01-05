@@ -28,7 +28,7 @@ export class UserController {
   @Post('/login/:address')
   @UseInterceptors(AuthInterceptor)
   async login(@Param() params, @Body() body: UserEntity, @Response() res) {
-    const existUser = await this.userRepository.findByAddress(params.address);
+    const existUser = await this.userRepository.getOneByAddress(params.address);
     if (existUser) {
       return res.json({
         msg: 'This address already exists.',
@@ -88,7 +88,7 @@ export class UserController {
     if (params.id === undefined) {
       return res.json({ msg: 'Invalid id', code: 400 });
     }
-    const entity = await this.userRepository.find(params.id);
+    const entity = await this.userRepository.getOneById(params.id);
     if (entity == null) {
       return res.json({ msg: 'resource not found', code: 404 });
     }
@@ -102,7 +102,7 @@ export class UserController {
     if (params.id === undefined) {
       return res.json({ msg: 'id not defined', code: 400 });
     }
-    const entity = await this.userRepository.find(params.id);
+    const entity = await this.userRepository.getOneById(params.id);
     if (!entity) {
       return res.json({ msg: 'resource not found', code: 404 });
     }
@@ -121,7 +121,7 @@ export class UserController {
     if (params.id === undefined) {
       return res.json({ msg: 'id not defined', code: 400 });
     }
-    const entity = await this.userRepository.find(params.id);
+    const entity = await this.userRepository.getOneById(params.id);
     if (entity == null) {
       return res.json({ msg: 'resource not found', code: 404 });
     }
@@ -141,7 +141,7 @@ export class UserController {
   @UseInterceptors(AdminInterceptor)
   async detail(@Param() params, @Response() res) {
     const { userAddress } = params;
-    const entity = await this.userRepository.findByAddress(userAddress);
+    const entity = await this.userRepository.getOneByAddress(userAddress);
     if (!entity) {
       return res.json({
         msg: `entity ${userAddress} not Found`,

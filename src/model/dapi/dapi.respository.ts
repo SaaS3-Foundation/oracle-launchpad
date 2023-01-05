@@ -1,6 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
-import { ChainRepository } from '../chain/chain.respository';
+import { DataSource, ILike, Repository } from 'typeorm';
 // import { ChainRepository } from '../chain/chain.respository';
 import { DapiEntity } from './dapi.entity';
 import { JobStatus } from './types';
@@ -14,7 +13,13 @@ export class DapiRepository {
     private dataSource: DataSource,
   ) {}
 
-  async page(index: number, size: number) {
+  async page(index: number, size: number, searchValue: string) {
+    const where = {
+      status: JobStatus.DONE,
+      oracleInfo: {
+        title: ILike(`%${searchValue}%`),
+      },
+    };
     const data = await this.dapiRepo.find({
       relations: [
         'creator',
@@ -23,15 +28,13 @@ export class DapiRepository {
         'oracleInfo.sourceChain',
         'oracleInfo.targetChain',
       ],
-      where: {
-        status: JobStatus.DONE,
-      },
+      where,
       take: size,
       skip: (index - 1) * size,
     });
 
     const count = await this.dapiRepo.count({
-      where: { status: JobStatus.DONE },
+      where,
     });
 
     return {

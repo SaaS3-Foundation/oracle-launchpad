@@ -3,7 +3,6 @@ import { UserRepository } from '../model/user/user.respository';
 import { ConfigService } from '@nestjs/config';
 import { UserEntity } from '../model/user/user.entity';
 import { DataSource } from 'typeorm';
-import { ChainEntity } from 'src/model/chain/chain.entity';
 import { WalletRepository } from 'src/model/wallet/wallet.respository';
 import { nanoid } from 'nanoid';
 import { ChainRepository } from 'src/model/chain/chain.respository';
