@@ -70,18 +70,6 @@ export class DapiController {
     }
   }
 
-  @Get('/status')
-  async getStatusBy(@Query('id') id: string, @Response() res) {
-    const job = await this.dapiRepository.find(id);
-    if (!job) {
-      return res.json({ msg: 'Not Found', code: 404 });
-    }
-    return res.json({
-      msg: 'OK',
-      code: 200,
-      data: { id: id, status: this.dapiService.status(job.status) },
-    });
-  }
 
   @Get('/list')
   async list(
