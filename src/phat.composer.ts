@@ -42,14 +42,38 @@ export function loadAnchorArtifact(path: string) {
 }
 
 export async function configFatContract(
-  api,
-  txqueue,
-  signer,
+  mnemonic,
+  chainUrl,
   pruntimeUrl,
-  artifact,
+  contractPath,
   name,
   args,
 ) {
+  // Create a keyring instance
+  const keyring = new Keyring({ type: 'sr25519' });
+
+  // Prepare accounts
+  const sponsor = keyring.addFromUri(mnemonic);
+
+  const artifact = loadFatContract(contractPath);
+
+  // connect to the chain
+  const wsProvider = new WsProvider(chainUrl);
+  console.log(wsProvider);
+  const api = await ApiPromise.create({
+    provider: wsProvider,
+    types: {
+      ...typeDefinitions.contracts.types,
+      GistQuote: {
+        username: 'String',
+        accountId: 'AccountId',
+      },
+      ...Phala.types,
+    },
+  });
+  const cert = await Phala.signCertificate({ api, pair: sponsor });
+
+  const txqueue = new TxQueue(api);
   // connect to pruntime
   const prpc = Phala.createPruntimeApi(pruntimeUrl);
   const connectedWorker = hex((await prpc.getInfo({})).publicKey);
@@ -72,15 +96,7 @@ export async function configFatContract(
   console.log('Fat Contract: connected', contract);
 
   // set up the contracts
-  await txqueue.submit(
-    // target_chain_rpc: Option<String>,
-    // anchor_contract_addr: Option<H160>,
-    // web2_api_url_prefix: Option<String>,
-    // api_key: Option<String>,
-    contract.api.tx.call(name, args),
-    signer,
-    true,
-  );
+  await txqueue.submit(contract.api.tx.call(name, args), sponsor, true);
 
   // wait for the worker to sync to the bockchain
   await blockBarrier(api, prpc);
@@ -94,7 +110,6 @@ export async function deployFatContract(
   chainUrl: string,
   pruntimeUrl: string,
   contractPath: string,
-  config: any,
 ) {
   // Create a keyring instance
   const keyring = new Keyring({ type: 'sr25519' });
@@ -139,21 +154,6 @@ export async function deployFatContract(
   );
   artifact.address = address;
   console.log(address);
-
-  await configFatContract(
-    api,
-    txqueue,
-    sponsor,
-    pruntimeUrl,
-    artifact,
-    'config',
-    [
-      config.target_chain_rpc, // saas3 protocol rpc
-      config.anchor_contract_addr,
-      config.web2_api_url_prefix,
-      config.api_key,
-    ],
-  );
 
   await blockBarrier(api, prpc);
 
@@ -258,6 +258,7 @@ export async function deployWithWeb3(
   sponsorMnemonic: string,
   abi: any,
   bytecode: any,
+  args: any[],
 ) {
   const web3 = new Web3(provider);
   const prikey = utils.getUserWallet(sponsorMnemonic, provider).privateKey;
@@ -270,7 +271,7 @@ export async function deployWithWeb3(
   const incrementer = new web3.eth.Contract(abi);
   const incrementerTx = incrementer.deploy({
     data: bytecode,
-    arguments: [],
+    arguments: args,
   });
   const tx = await web3.eth.accounts.signTransaction(
     {
@@ -283,4 +284,49 @@ export async function deployWithWeb3(
   const receipt = await web3.eth.sendSignedTransaction(tx.rawTransaction);
   console.log(`Contract deployed at address: ${receipt.contractAddress}`);
   return { address: receipt.contractAddress, abi: abi };
+}
+
+export async function configAnchor(
+  provider: string,
+  abi: any,
+  addr: string,
+  sponsorMnemonic: string,
+  args: any,
+  gasLimit: number,
+) {
+  const web3 = new Web3(provider);
+  const anchor = new web3.eth.Contract(abi as any, addr);
+
+  let prikey = utils.getUserWallet(sponsorMnemonic, provider).privateKey;
+  let signer = web3.eth.accounts.privateKeyToAccount(prikey);
+  web3.eth.accounts.wallet.add(signer);
+
+  const r_nonce = await web3.eth.getTransactionCount(addr, 'pending');
+  console.log('nonce', r_nonce);
+
+  console.log('configuring anchor...');
+  let gas_price = await web3.eth.getGasPrice();
+  console.log('gas_price', gas_price);
+
+  let c = anchor.methods['config'](args);
+  let eg =
+    (await web3.eth.estimateGas({
+      from: signer.address,
+      to: addr,
+      data: c.encodeABI(),
+    })) * 10;
+  if (gasLimit > eg) {
+    eg = gasLimit;
+  }
+
+  let receipt = await web3.eth.sendTransaction({
+    from: signer.address,
+    to: addr,
+    data: c.encodeABI(),
+    gas: eg,
+    gasPrice: gas_price,
+  });
+
+  console.log('configuring anchor done. receipt:', receipt);
+  return { ok: true, retry: false };
 }

@@ -59,17 +59,25 @@ export class DapiController {
       return res.json({ msg: c.err, code: 400 });
     }
     try {
-      if (this.configService.get('NODE_ENV') === 'development') {
-        await this.dapiService.save(entity);
-      } else {
-        await this.dapiService.submitV2(entity);
-      }
+      await this.dapiService.submitV2(entity);
       return res.json({ msg: 'OK', code: 200, data: { id: entity.id } });
     } catch (error) {
       res.json({ msg: error?.message || 'Failed to deploy oracle', code: 500 });
     }
   }
 
+  @Get('/status')
+  async getStatusBy(@Query('id') id: string, @Response() res) {
+    const job = await this.dapiRepository.find(id);
+    if (!job) {
+      return res.json({ msg: 'Not Found', code: 404 });
+    }
+    return res.json({
+      msg: 'OK',
+      code: 200,
+      data: { id: id, status: this.dapiService.status(job.status) },
+    });
+  }
 
   @Get('/list')
   async list(
