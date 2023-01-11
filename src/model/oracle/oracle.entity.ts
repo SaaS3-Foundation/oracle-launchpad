@@ -19,6 +19,16 @@ export class OracleEntity extends BaseEntity {
   @Column({ type: 'varchar', length: 200 })
   address: string;
 
+  // phala evm transactor address
+  // required by phala chain
+  @Column({ type: 'varchar', length: 200, nullable: true })
+  transactor: string;
+
+  // phala anchor contract address
+  // required by phala chain
+  @Column({ type: 'varchar', length: 200, nullable: true })
+  anchor: string;
+
   @OneToOne(() => Web2InfoEntity, { cascade: true })
   @JoinColumn({ name: 'web2_info_id' })
   web2Info: Web2InfoEntity;

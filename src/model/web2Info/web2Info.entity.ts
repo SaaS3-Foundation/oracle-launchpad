@@ -25,5 +25,11 @@ export class Web2InfoEntity extends BaseEntity {
   params: Record<string, string>;
 
   @Column({ type: 'jsonb' })
+  fixedParams: Map<string, boolean>;
+
+  @Column({ type: 'jsonb' })
+  fixedHeaders: Map<string, boolean>;
+
+  @Column({ type: 'jsonb' })
   body: Record<string, string>;
 }
