@@ -1,15 +1,4 @@
-import { RequestMethod } from '@nestjs/common';
-import {
-  PrimaryColumn,
-  Entity,
-  Column,
-  UpdateDateColumn,
-  CreateDateColumn,
-  OneToOne,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Entity, Column, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
 import { OracleEntity } from '../oracle/oracle.entity';
 import BaseEntity from '../base.entity';
 import { UserEntity } from '../user/user.entity';

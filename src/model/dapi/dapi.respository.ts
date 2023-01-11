@@ -17,7 +17,7 @@ export class DapiRepository {
     const where = {
       status: JobStatus.DONE,
       oracleInfo: {
-        title: ILike(`%${searchValue}%`),
+        title: searchValue ? ILike(`%${searchValue}%`) : undefined,
       },
     };
     const data = await this.dapiRepo.find({

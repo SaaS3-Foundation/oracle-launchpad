@@ -92,7 +92,7 @@ export class DapiController {
   ) {
     const nsize = Number(size) || 20;
     const npage = Number(page) || 1;
-    this.dapiRepository.page(npage, nsize, searchValue).then((ret) => {
+    this.dapiRepository.page(npage, nsize, searchValue || '').then((ret) => {
       res.json({ msg: 'OK', code: 200, data: ret });
     });
   }

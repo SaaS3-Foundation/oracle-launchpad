@@ -14,6 +14,12 @@ export const network = [
     httpProvider: 'https://bsc.mytokenpocket.vip',
   },
   {
+    name: 'Moonbase Alpha',
+    type: ChainType.EVM,
+    chainId: '1287',
+    httpProvider: 'https://bsc.mytokenpocket.vip',
+  },
+  {
     type: ChainType.PHALA,
     name: 'Phala Mainnet',
     chainId: 'Phala Mainnet',
