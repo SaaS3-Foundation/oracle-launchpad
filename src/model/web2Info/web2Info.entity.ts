@@ -1,6 +1,6 @@
 import { Column, Entity } from 'typeorm';
 import BaseEntity from '../base.entity';
-import { Methods } from './types';
+import { AuthType, Methods } from './types';
 
 @Entity('apiinfo')
 export class Web2InfoEntity extends BaseEntity {
@@ -33,6 +33,6 @@ export class Web2InfoEntity extends BaseEntity {
   @Column({ type: 'jsonb' })
   body: Record<string, string>;
 
-  @Column({ type: 'varchar'})
-  authType: string;
+  @Column({ type: 'numeric'})
+  authType: AuthType;
 }
