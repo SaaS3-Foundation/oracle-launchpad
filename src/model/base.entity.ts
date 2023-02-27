@@ -18,10 +18,4 @@ export default class BaseEntity {
 
   @UpdateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   update_at?: Date;
-
-  @Column({ type: 'int', nullable: true, default: -1 })
-  state?: number;
-
-  @Column({ type: 'numeric', nullable: true, default: -1 })
-  delete_at?: number;
 }

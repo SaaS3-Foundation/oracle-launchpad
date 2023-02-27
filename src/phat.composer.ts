@@ -17,6 +17,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { ethers } from 'ethers';
 import Web3 from 'web3';
+import { BlobOptions } from 'buffer';
 
 export function loadFatContract(contractPath: string) {
   const f = fs.readFileSync(contractPath);
@@ -110,6 +111,7 @@ export async function deployFatContract(
   chainUrl: string,
   pruntimeUrl: string,
   contractPath: string,
+  isQjs: boolean = false,
 ) {
   // Create a keyring instance
   const keyring = new Keyring({ type: 'sr25519' });
@@ -151,6 +153,7 @@ export async function deployFatContract(
     artifact,
     clusterId,
     '',
+    isQjs,
   );
   artifact.address = address;
   console.log(address);
@@ -171,19 +174,32 @@ export async function submit(
   artifact,
   clusterId,
   salt,
+  isQjs: boolean = false,
 ) {
   salt = salt || hex(crypto.randomBytes(4));
   console.log('Contracts: uploading', artifact.name);
 
   // upload the contract
-  await txqueue.submit(
-    api.tx.phalaFatContracts.clusterUploadResource(
-      clusterId,
-      'InkCode',
-      artifact.wasm,
-    ),
-    account,
-  );
+  if (isQjs == true) {
+    await txqueue.submit(
+      api.tx.phalaFatContracts.clusterUploadResource(
+        clusterId,
+        'IndeterministicInkCode',
+        hex(artifact.wasm),
+      ),
+      account,
+    );
+    return;
+  } else {
+    await txqueue.submit(
+      api.tx.phalaFatContracts.clusterUploadResource(
+        clusterId,
+        'InkCode',
+        artifact.wasm,
+      ),
+      account,
+    );
+  }
 
   // Not sure how much time it would take to sync the code into pruntime
   console.log(

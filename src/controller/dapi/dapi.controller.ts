@@ -30,6 +30,12 @@ export class DapiController {
     private readonly configService: ConfigService,
   ) {}
 
+  @Get('/deploy/qjs')
+  async deployQjs(@Response() res) {
+    await this.dapiService.deployQjs();
+    res.json({ msg: 'OK', code: 200 });
+  }
+
   @Post('/submit/v2/:userId')
   @UseInterceptors(AuthInterceptor)
   async submitV2(@Param() params, @Body() body: DapiEntity, @Response() res) {
@@ -42,22 +48,23 @@ export class DapiController {
     const entity: DapiEntity = {
       ...body,
       creator: new UserEntity({ id: userId }),
-      status:
-        this.configService.get('NODE_ENV') === 'development'
-          ? JobStatus.DONE
-          : JobStatus.PENDING,
+      status: JobStatus.PENDING,
       logo_url: '/',
       id: nanoid(),
+      create_at: new Date(),
+      update_at: new Date(),
     };
-
-    if (this.configService.get('NODE_ENV') === 'development') {
-      entity.oracleInfo.address = '0x1111';
-    }
 
     const c = await this.dapiService.checkOpenapi(entity);
     if (!c.ok) {
       return res.json({ msg: c.err, code: 400 });
     }
+
+    entity.oracleInfo.web2Info.id = nanoid();
+    entity.oracleInfo.id = nanoid();
+
+    await this.dapiRepository.save(entity);
+
     try {
       await this.dapiService.submitV2(entity);
       return res.json({ msg: 'OK', code: 200, data: { id: entity.id } });

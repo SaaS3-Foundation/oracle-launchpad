@@ -2,7 +2,7 @@ import { Column, Entity } from 'typeorm';
 import BaseEntity from '../base.entity';
 import { Methods } from './types';
 
-@Entity('web2Info')
+@Entity('apiinfo')
 export class Web2InfoEntity extends BaseEntity {
   public constructor(init?: Partial<Web2InfoEntity>) {
     super(init);
@@ -24,12 +24,15 @@ export class Web2InfoEntity extends BaseEntity {
   @Column({ type: 'jsonb' })
   params: Record<string, string>;
 
-  @Column({ type: 'jsonb' })
+  @Column({ type: 'jsonb', nullable: true })
   fixedParams: Map<string, boolean>;
 
-  @Column({ type: 'jsonb' })
+  @Column({ type: 'jsonb', nullable: true })
   fixedHeaders: Map<string, boolean>;
 
   @Column({ type: 'jsonb' })
   body: Record<string, string>;
+
+  @Column({ type: 'varchar'})
+  authType: string;
 }

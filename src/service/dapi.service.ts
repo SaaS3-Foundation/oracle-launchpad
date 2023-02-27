@@ -11,6 +11,7 @@ import { ChainRepository } from 'src/model/chain/chain.respository';
 import { nanoid } from 'nanoid';
 import { Web2InfoEntity } from 'src/model/web2Info/web2Info.entity';
 import { OracleEntity } from 'src/model/oracle/oracle.entity';
+import { apiCallParametersSchema } from '@api3/airnode-node/dist/src/validation';
 
 @Injectable()
 export class DapiService {
@@ -40,26 +41,42 @@ export class DapiService {
     return { ok: true };
   }
 
+  async deployQjs(): Promise<any> {
+    const sponsorMnemonic = this.configService.get('SPONSOR_MNEMONIC');
+    await phala.deployFatContract(
+      sponsorMnemonic,
+      '0x0000000000000000000000000000000000000000000000000000000000000000',
+      'ws://localhost:19944',
+      'http://localhost:18000',
+      this.configService.get('QJS_PATH'),
+      true,
+    );
+  }
+
   async submitV2(dapi: DapiEntity): Promise<any> {
+    console.log('deploying oralce service ...');
     // prepare data
     const sponsorMnemonic = this.configService.get('SPONSOR_MNEMONIC');
     const saas3ProtocolAddress = this.configService.get(
       'SAAS3_PROTOCOL_ADDRESS',
     );
 
-    // deploy source chain druntime
-    this.dapiRepository.updateStatus(
-      dapi.id,
-      JobStatus.DEPOLYING_SAAS3_DRUNTIME,
+    // find chain info
+    dapi.oracleInfo.sourceChain = await this.chainRepo.findByChainId(
+      dapi.oracleInfo.sourceChain.chainId,
+    );
+    dapi.oracleInfo.targetChain = await this.chainRepo.findByChainId(
+      dapi.oracleInfo.targetChain.chainId,
     );
 
     // phala source chain
     if (dapi.oracleInfo.sourceChain.type == ChainType.PHALA) {
-      this.dapiRepository.updateStatus(
+      await this.dapiRepository.updateStatus(
         dapi.id,
         JobStatus.DEPOLYING_SAAS3_DRUNTIME,
       );
 
+      console.log('deploying druntime fat contract ...');
       // deploy our druntime first, so it will fail fast
       dapi.oracleInfo.address = await phala.deployFatContract(
         sponsorMnemonic,
@@ -74,25 +91,19 @@ export class DapiService {
         dapi.id,
         JobStatus.DEPLOYING_PHALA_TRANSACTOR,
       );
-      // deploy phala evm transactor
-      dapi.oracleInfo.transactor = await phala.deployFatContract(
-        sponsorMnemonic,
-        dapi.oracleInfo.sourceChain.clusterId,
-        dapi.oracleInfo.sourceChain.wsProvider,
-        dapi.oracleInfo.sourceChain.pruntime,
-        this.configService.get('PHALA_EVM_TRANSACTOR_PATH'),
-      );
-      // evm transactor need anchor contract address, we'll do it later
 
       // deploy phala anchor
       if (dapi.oracleInfo.targetChain.type == ChainType.EVM) {
-        this.dapiRepository.updateStatus(
+        console.log('deploying phala anchor ...');
+
+        await this.dapiRepository.updateStatus(
           dapi.id,
           JobStatus.DEPLOYING_PHALA_ANCHOR,
         );
         const artifact = phala.loadAnchorArtifact(
           this.configService.get('PHALA_ANCHOR_PATH'),
         );
+        console.log('artifact loaded.');
         let res = await phala.deployWithWeb3(
           dapi.oracleInfo.targetChain.httpProvider,
           sponsorMnemonic,
@@ -107,22 +118,8 @@ export class DapiService {
         dapi.oracleInfo.anchor = res.address;
       }
 
-      // config evm transactor
-      phala.configFatContract(
-        sponsorMnemonic,
-        dapi.oracleInfo.sourceChain.wsProvider,
-        dapi.oracleInfo.sourceChain.pruntime,
-        this.configService.get('PHALA_EVM_TRANSACTOR_PATH'),
-        'config',
-        {
-          rpc: dapi.oracleInfo.targetChain.httpProvider,
-          rollup_handler: dapi.oracleInfo.address,
-          anchor: dapi.oracleInfo.anchor,
-        },
-      );
-
       // config druntime
-      phala.configFatContract(
+      await phala.configFatContract(
         sponsorMnemonic,
         dapi.oracleInfo.sourceChain.wsProvider,
         dapi.oracleInfo.sourceChain.pruntime,
@@ -131,7 +128,10 @@ export class DapiService {
         {
           target_chain_rpc: dapi.oracleInfo.targetChain.httpProvider,
           anchor_contract_addr: dapi.oracleInfo.anchor,
+          submit_key: null,
           web2_api_url_prefix: dapi.oracleInfo.web2Info.uri,
+          js_engine_code_hash: dapi.oracleInfo.jsEngineCodeHash,
+          method: dapi.oracleInfo.web2Info.method.toUpperCase(),
           api_key: 'TODO',
         },
       );

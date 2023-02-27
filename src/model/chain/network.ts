@@ -21,14 +21,9 @@ export const network = [
   },
   {
     type: ChainType.PHALA,
-    name: 'Phala Mainnet',
-    chainId: 'Phala Mainnet',
-    wsProvider: 'wss://api.phala.network/ws',
-  },
-  {
-    type: ChainType.PHALA,
     name: 'Phala Testnet',
     chainId: 'Phala Testnet',
-    wsProvider: 'wss://pc-test-3.phala.network/khala/ws',
+    wsProvider: 'wss://poc5.phala.network/ws',
+    pruntime: 'https://poc5.phala.network/tee-api-1',
   },
 ];
