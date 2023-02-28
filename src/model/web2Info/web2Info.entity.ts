@@ -33,6 +33,6 @@ export class Web2InfoEntity extends BaseEntity {
   @Column({ type: 'jsonb' })
   body: Record<string, string>;
 
-  @Column({ type: 'numeric'})
+  @Column({ type: 'numeric' })
   authType: AuthType;
 }

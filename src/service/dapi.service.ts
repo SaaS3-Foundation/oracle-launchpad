@@ -57,6 +57,7 @@ export class DapiService {
     console.log('deploying oralce service ...');
     // prepare data
     const sponsorMnemonic = this.configService.get('SPONSOR_MNEMONIC');
+    const jsEngineCodeHash = this.configService.get('JS_ENGINE_CODE_HASH');
     const saas3ProtocolAddress = this.configService.get(
       'SAAS3_PROTOCOL_ADDRESS',
     );
@@ -110,7 +111,7 @@ export class DapiService {
           artifact.abi,
           artifact.bytecode,
           [
-            dapi.oracleInfo.transactor,
+            dapi.oracleInfo.wallet,
             saas3ProtocolAddress,
             '0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000017100000000000000000000000000000000000000000000000000000000000000',
           ],
@@ -130,8 +131,9 @@ export class DapiService {
           anchor_contract_addr: dapi.oracleInfo.anchor,
           submit_key: null,
           web2_api_url_prefix: dapi.oracleInfo.web2Info.uri,
-          js_engine_code_hash: dapi.oracleInfo.jsEngineCodeHash,
+          js_engine_code_hash: jsEngineCodeHash,
           method: dapi.oracleInfo.web2Info.method.toUpperCase(),
+          auth_type: dapi.oracleInfo.web2Info.authType,
           api_key: 'TODO',
         },
       );

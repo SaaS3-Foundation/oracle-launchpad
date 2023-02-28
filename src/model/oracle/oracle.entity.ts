@@ -24,9 +24,11 @@ export class OracleEntity extends BaseEntity {
   @Column({ type: 'varchar', length: 200, nullable: true })
   anchor: string;
 
-  // phala js engine code hash
+  // wallet address which submited the answer
   @Column({ type: 'varchar', length: 200, nullable: true })
-  jsEngineCodeHash: string;
+  wallet: string;
+
+  privateKey: string;
 
   @OneToOne(() => Web2InfoEntity, { cascade: true })
   @JoinColumn({ name: 'web2_info_id' })
