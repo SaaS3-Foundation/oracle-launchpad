@@ -20,6 +20,7 @@ import { UserEntity } from 'src/model/user/user.entity';
 import { JobStatus } from 'src/model/dapi/types';
 import { Web2InfoEntity } from 'src/model/web2Info/web2Info.entity';
 import { nanoid } from 'nanoid';
+import axios, {isCancel, AxiosError} from 'axios';
 
 @Controller('/saas3/dapi')
 export class DapiController {
@@ -143,11 +144,23 @@ export class DapiController {
     if (req.method === 'GET') {
       req.body = null;
     }
+    console.log(req.body);
+    console.log(JSON.stringify(req.body));
+    let a = {
+      "model": "text-davinci-edit-001",
+      "input": "I missed you",
+      "instruction": "Fix the spelling mistakes"
+    } as any;
+    //req.headers.content_type = 'application/json';
+    req.headers.content_type = 'application/json';
+    console.log(req.headers);
+
     try {
       const response = await fetch(req.uri, {
         method: req.method,
         headers: req.headers,
-        body: req.body as any,
+        body: JSON.stringify(req.body),
+        //body: a,
       });
       return { ok: true, data: await response.json() };
     } catch (e) {
@@ -155,9 +168,36 @@ export class DapiController {
     }
   };
 
+  dotest2 = async (req: Web2InfoEntity) => {
+    if (req.method === 'GET') {
+      req.body = null;
+    }
+    console.log(req.body);
+    console.log(JSON.stringify(req.body));
+    let a = {
+      "model": "text-davinci-edit-001",
+      "input": "I missed you",
+      "instruction": "Fix the spelling mistakes"
+    } as any;
+
+    try {
+      const response = await axios({
+        url: req.uri,
+        method: req.method,
+        headers: req.headers,
+        data: req.body,
+        responseType: 'json',
+        //body: a,
+      });
+      return { ok: true, data: response.data };
+    } catch (e) {
+      return { ok: false, errmsg: e.toString() };
+    }
+  };
+
   @Post('/testrun')
   async testrun(@Body() body: Web2InfoEntity, @Response() res) {
-    const r = await this.dotest(body);
+    const r = await this.dotest2(body);
     if (r.ok == true) {
       res.json({ msg: 'OK', code: 200, data: r.data });
     } else {
