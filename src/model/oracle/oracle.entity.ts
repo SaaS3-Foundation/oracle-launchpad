@@ -29,6 +29,7 @@ export class OracleEntity extends BaseEntity {
   wallet: string;
 
   // wallet private key
+  @Column({ type: 'varchar', length: 200, nullable: true })
   privateKey: string;
 
   @OneToOne(() => Web2InfoEntity, { cascade: true })

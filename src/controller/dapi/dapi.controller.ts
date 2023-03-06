@@ -64,6 +64,7 @@ export class DapiController {
     entity.oracleInfo.web2Info.id = nanoid();
     entity.oracleInfo.id = nanoid();
 
+    console.log(entity);
     await this.dapiRepository.save(entity);
 
     try {
@@ -172,22 +173,13 @@ export class DapiController {
     if (req.method === 'GET') {
       req.body = null;
     }
-    console.log(req.body);
-    console.log(JSON.stringify(req.body));
-    let a = {
-      "model": "text-davinci-edit-001",
-      "input": "I missed you",
-      "instruction": "Fix the spelling mistakes"
-    } as any;
-
     try {
       const response = await axios({
         url: req.uri,
         method: req.method,
         headers: req.headers,
-        data: req.body,
+        //data: req.body,
         responseType: 'json',
-        //body: a,
       });
       return { ok: true, data: response.data };
     } catch (e) {

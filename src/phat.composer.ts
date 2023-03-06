@@ -217,7 +217,8 @@ export async function submit(
       clusterId,
       0,
       '10000000000000',
-      null,
+      0,
+      0,
     ),
     account,
   );
@@ -245,7 +246,7 @@ export async function submit(
         ev.event.method === 'Instantiating',
     )
     .map((ev) => ev.event.data[0].toString());
-  console.log(contractIds);
+  console.log('uploaded contract ids', contractIds);
 
   const numContracts = 1;
   console.assert(

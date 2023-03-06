@@ -26,4 +26,11 @@ export const network = [
     wsProvider: 'wss://poc5.phala.network/ws',
     pruntime: 'https://poc5.phala.network/tee-api-1',
   },
+  {
+    type: ChainType.PHALA,
+    name: 'Phala PreAlpha',
+    chainId: 'Phala PreAlpha',
+    wsProvider: 'ws://localhost:19944',
+    pruntime: 'http://localhost:18000',
+  },
 ];
