@@ -84,7 +84,7 @@ export class DapiRepository {
       .getRepository(DapiEntity)
       .update({ id: id }, { status: status, update_at: new Date() });
     if (res.affected) {
-      console.log('update status success');
+      console.log('update status success', status);
     } else {
       console.log('update status failed');
     }

@@ -17,7 +17,7 @@ export const network = [
     name: 'Moonbase Alpha',
     type: ChainType.EVM,
     chainId: '1287',
-    httpProvider: 'https://bsc.mytokenpocket.vip',
+    httpProvider: 'https://rpc.api.moonbase.moonbeam.network',
   },
   {
     type: ChainType.PHALA,
@@ -30,6 +30,8 @@ export const network = [
     type: ChainType.PHALA,
     name: 'Phala PreAlpha',
     chainId: 'Phala PreAlpha',
+    clusterId:
+      '0x0000000000000000000000000000000000000000000000000000000000000000',
     wsProvider: 'ws://localhost:19944',
     pruntime: 'http://localhost:18000',
   },

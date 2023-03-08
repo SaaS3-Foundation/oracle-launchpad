@@ -12,6 +12,7 @@ import { nanoid } from 'nanoid';
 import { Web2InfoEntity } from 'src/model/web2Info/web2Info.entity';
 import { OracleEntity } from 'src/model/oracle/oracle.entity';
 import { apiCallParametersSchema } from '@api3/airnode-node/dist/src/validation';
+import { AuthType } from 'src/model/web2Info/types';
 
 @Injectable()
 export class DapiService {
@@ -77,7 +78,11 @@ export class DapiService {
         JobStatus.DEPOLYING_SAAS3_DRUNTIME,
       );
 
-      console.log('deploying druntime fat contract ...');
+      console.log(
+        'deploying druntime fat contract to',
+        dapi.oracleInfo.sourceChain,
+        '...',
+      );
       // deploy our druntime first, so it will fail fast
       dapi.oracleInfo.address = await phala.deployFatContract(
         sponsorMnemonic,
@@ -87,11 +92,6 @@ export class DapiService {
         this.configService.get('DRUNTIME_FAT_PATH'),
       );
       // druntime need anchor contract address, we'll do it later
-
-      this.dapiRepository.updateStatus(
-        dapi.id,
-        JobStatus.DEPLOYING_PHALA_TRANSACTOR,
-      );
 
       // deploy phala anchor
       if (dapi.oracleInfo.targetChain.type == ChainType.EVM) {
@@ -104,7 +104,7 @@ export class DapiService {
         const artifact = phala.loadAnchorArtifact(
           this.configService.get('PHALA_ANCHOR_PATH'),
         );
-        console.log('artifact loaded.');
+        console.log('anchor artifact loaded.');
         let res = await phala.deployWithWeb3(
           dapi.oracleInfo.targetChain.httpProvider,
           sponsorMnemonic,
@@ -117,6 +117,17 @@ export class DapiService {
           ],
         );
         dapi.oracleInfo.anchor = res.address;
+        console.log('anchor deployed at', dapi.oracleInfo.anchor);
+      }
+
+      // get private key
+      let apikey = null;
+      if (dapi.oracleInfo.web2Info.authType == AuthType.BearerToken) {
+        apikey = dapi.oracleInfo.web2Info.headers['Authorization'];
+      } else if (dapi.oracleInfo.web2Info.authType == AuthType.ApiKeyInHeader) {
+        for (let h in dapi.oracleInfo.web2Info.headers) {
+          console.log(h);
+        }
       }
 
       // config druntime
@@ -125,16 +136,17 @@ export class DapiService {
         dapi.oracleInfo.sourceChain.wsProvider,
         dapi.oracleInfo.sourceChain.pruntime,
         this.configService.get('DRUNTIME_FAT_PATH'),
+        this.configService.get('PHALA_SYSTEM_PATH'),
         'config',
         {
           target_chain_rpc: dapi.oracleInfo.targetChain.httpProvider,
           anchor_contract_addr: dapi.oracleInfo.anchor,
-          submit_key: null,
+          submit_key: dapi.oracleInfo.privateKey,
           web2_api_url_prefix: dapi.oracleInfo.web2Info.uri,
           js_engine_code_hash: jsEngineCodeHash,
           method: dapi.oracleInfo.web2Info.method.toUpperCase(),
           auth_type: dapi.oracleInfo.web2Info.authType,
-          api_key: 'TODO',
+          api_key: apikey,
         },
       );
     }

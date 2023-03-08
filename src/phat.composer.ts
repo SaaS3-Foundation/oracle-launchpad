@@ -19,6 +19,8 @@ import { ethers } from 'ethers';
 import Web3 from 'web3';
 import { BlobOptions } from 'buffer';
 
+const CENTS = 10_000_000_000;
+
 export function loadFatContract(contractPath: string) {
   const f = fs.readFileSync(contractPath);
   const contract = JSON.parse(f.toString());
@@ -47,6 +49,7 @@ export async function configFatContract(
   chainUrl,
   pruntimeUrl,
   contractPath,
+  systemContractPath,
   name,
   args,
 ) {
@@ -80,24 +83,25 @@ export async function configFatContract(
   const connectedWorker = hex((await prpc.getInfo({})).publicKey);
   console.log('Connected worker:', connectedWorker);
 
-  const newApi = await api.clone().isReady;
-  console.log(newApi);
-  const t = await Phala.create({
-    api: newApi,
-    baseURL: pruntimeUrl,
-    contractId: artifact.address,
-    autoDeposit: true,
-  });
-  console.log(t);
-  const contract = new ContractPromise(
-    t.api,
-    artifact.contract,
-    artifact.address,
-  );
+  //const newApi = await api.clone().isReady;
+  //console.log(newApi);
+  //const t = await Phala.create({
+  //  api: newApi,
+  //  baseURL: pruntimeUrl,
+  //  contractId: artifact.address,
+  //  autoDeposit: true,
+  //});
+  //console.log(t);
+  //const contract = new ContractPromise(
+  //  t.api,
+  //  artifact.contract,
+  //  artifact.address,
+  //);
+  let contract = await contractApi(api, pruntimeUrl, artifact);
   console.log('Fat Contract: connected', contract);
 
   // set up the contracts
-  await txqueue.submit(contract.api.tx.call(name, args), sponsor, true);
+  await txqueue.submit(contract.contractApi.tx.call(name, args), sponsor, true);
 
   // wait for the worker to sync to the bockchain
   await blockBarrier(api, prpc);
@@ -152,6 +156,7 @@ export async function deployFatContract(
     cert,
     artifact,
     clusterId,
+    pruntimeUrl,
     '',
     isQjs,
   );
@@ -173,6 +178,7 @@ export async function submit(
   cert,
   artifact,
   clusterId,
+  pruntimeUrl,
   salt,
   isQjs: boolean = false,
 ) {
@@ -208,6 +214,52 @@ export async function submit(
   await sleep(10000);
   console.log(`Contracts: ${artifact.name} uploaded`);
 
+  const system = loadFatContract(
+    '/Users/songtianyi/workhub/github/phala-blockchain/e2e/res/system.contract',
+  );
+  console.log('system loaded ', system.name, system.hash);
+
+  console.log('quering cluster', clusterId);
+  const clusterInfo = await api.query.phalaFatContracts.clusters(clusterId);
+  console.log('cluster info', clusterInfo);
+  system.address = clusterInfo.unwrap().systemContract.toHex();
+
+  console.log('creating system contract api ...');
+  let r = await contractApi(api, pruntimeUrl, system);
+  let systemContract = r.contractApi;
+  console.log('systemContract', systemContract);
+
+  console.log('quering', account.address, 'free balance');
+  const { output } = await systemContract.query['system::freeBalanceOf'](
+    cert,
+    {},
+    account.address,
+  );
+  console.log('freeBalance:', output);
+
+  const instantiateReturn = await r.phala.instantiate(
+    {
+      // @ts-ignore
+      codeHash: system.hash,
+      salt,
+      instantiateData: system.constructor, // please concat with args if needed
+      deposit: 0,
+      transfer: 0,
+    },
+    cert,
+  );
+
+  console.log('instantiate result:', instantiateReturn);
+  const queryResponse = api.createType('InkResponse', instantiateReturn);
+  const queryResult = queryResponse.result.toHuman();
+  console.log('InkMessageReturn', queryResult.Ok.InkMessageReturn);
+  const instantiateResult = api.createType(
+    'ContractInstantiateResult',
+    queryResult.Ok.InkMessageReturn,
+  );
+  console.assert(instantiateResult.result.isOk);
+  console.log('gasRequired', instantiateResult.gasRequired);
+
   console.log('Contracts: instantiating', artifact.name);
   const { events: deployEvents } = await txqueue.submit(
     api.tx.phalaFatContracts.instantiateContract(
@@ -216,9 +268,9 @@ export async function submit(
       salt,
       clusterId,
       0,
-      '10000000000000',
-      0,
-      0,
+      instantiateResult.gasRequired.refTime,
+      instantiateResult.storageDeposit.asCharge || 0,
+      100000000000,
     ),
     account,
   );
@@ -278,6 +330,7 @@ export async function deployWithWeb3(
   args: any[],
 ) {
   const web3 = new Web3(provider);
+  console.log('provider connected.', provider);
   const prikey = utils.getUserWallet(sponsorMnemonic, provider).privateKey;
   const accountFrom = {
     privateKey: prikey,
@@ -346,4 +399,20 @@ export async function configAnchor(
 
   console.log('configuring anchor done. receipt:', receipt);
   return { ok: true, retry: false };
+}
+
+export async function contractApi(api, pruntimeURL, contract) {
+  const newApi = await api.clone().isReady;
+  const phala = await Phala.create({
+    api: newApi,
+    baseURL: pruntimeURL,
+    contractId: contract.address,
+    autoDeposit: true,
+  });
+  const contractApi = new ContractPromise(
+    phala.api,
+    contract.contract,
+    contract.address,
+  );
+  return { contractApi, phala };
 }

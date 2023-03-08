@@ -16,6 +16,7 @@ export class OracleEntity extends BaseEntity {
   @Column({ type: 'text' })
   description: string;
 
+  // oracle address
   @Column({ type: 'varchar', length: 200, nullable: true })
   address: string;
 
