@@ -50,9 +50,11 @@ export async function configFatContract(
   pruntimeUrl,
   contractPath,
   systemContractPath,
+  address,
   name,
   args,
 ) {
+  console.log('config args', args);
   // Create a keyring instance
   const keyring = new Keyring({ type: 'sr25519' });
 
@@ -60,10 +62,11 @@ export async function configFatContract(
   const sponsor = keyring.addFromUri(mnemonic);
 
   const artifact = loadFatContract(contractPath);
+  artifact.address = address;
 
   // connect to the chain
   const wsProvider = new WsProvider(chainUrl);
-  console.log(wsProvider);
+  console.log('connected to', chainUrl);
   const api = await ApiPromise.create({
     provider: wsProvider,
     types: {
@@ -75,16 +78,20 @@ export async function configFatContract(
       ...Phala.types,
     },
   });
+  console.log('api created.');
   const cert = await Phala.signCertificate({ api, pair: sponsor });
+  console.log('cert signed.');
 
   const txqueue = new TxQueue(api);
+  console.log('queue created.');
   // connect to pruntime
   const prpc = Phala.createPruntimeApi(pruntimeUrl);
+  console.log('prpc connected.');
   const connectedWorker = hex((await prpc.getInfo({})).publicKey);
   console.log('Connected worker:', connectedWorker);
 
-  //const newApi = await api.clone().isReady;
-  //console.log(newApi);
+  const newApi = await api.clone().isReady;
+  console.log('attaching fat contract', artifact.address, '...');
   //const t = await Phala.create({
   //  api: newApi,
   //  baseURL: pruntimeUrl,
@@ -98,10 +105,29 @@ export async function configFatContract(
   //  artifact.address,
   //);
   let contract = await contractApi(api, pruntimeUrl, artifact);
-  console.log('Fat Contract: connected', contract);
+  console.log('Fat Contract: connected', artifact.address);
 
   // set up the contracts
-  await txqueue.submit(contract.contractApi.tx.call(name, args), sponsor, true);
+  const estimate = await contract.contractApi.query[name](
+    cert as any,
+    {},
+    ...args,
+  );
+  await txqueue.submit(
+    contract.contractApi.tx[name](
+      {
+        gasLimit: estimate.gasRequired,
+        storageDepositLimit: estimate.storageDeposit.isCharge
+          ? estimate.storageDeposit.asCharge
+          : null,
+      },
+      ...args, // args 或者 ...args 都是同样的错误
+    ),
+    sponsor,
+    true,
+  );
+
+  console.log('configured, waitting to sync ...');
 
   // wait for the worker to sync to the bockchain
   await blockBarrier(api, prpc);
@@ -227,7 +253,7 @@ export async function submit(
   console.log('creating system contract api ...');
   let r = await contractApi(api, pruntimeUrl, system);
   let systemContract = r.contractApi;
-  console.log('systemContract', systemContract);
+  console.log('systemContract', systemContract.address, 'connected.');
 
   console.log('quering', account.address, 'free balance');
   const { output } = await systemContract.query['system::freeBalanceOf'](
@@ -257,6 +283,7 @@ export async function submit(
     'ContractInstantiateResult',
     queryResult.Ok.InkMessageReturn,
   );
+  console.log('instatiateResult', instantiateResult);
   console.assert(instantiateResult.result.isOk);
   console.log('gasRequired', instantiateResult.gasRequired);
 
@@ -351,6 +378,7 @@ export async function deployWithWeb3(
     },
     accountFrom.privateKey,
   );
+  console.log('sending transaction ...');
   const receipt = await web3.eth.sendSignedTransaction(tx.rawTransaction);
   console.log(`Contract deployed at address: ${receipt.contractAddress}`);
   return { address: receipt.contractAddress, abi: abi };

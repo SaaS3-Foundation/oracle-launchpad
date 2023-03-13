@@ -105,18 +105,19 @@ export class DapiService {
           this.configService.get('PHALA_ANCHOR_PATH'),
         );
         console.log('anchor artifact loaded.');
-        let res = await phala.deployWithWeb3(
-          dapi.oracleInfo.targetChain.httpProvider,
-          sponsorMnemonic,
-          artifact.abi,
-          artifact.bytecode,
-          [
-            dapi.oracleInfo.wallet,
-            saas3ProtocolAddress,
-            '0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000017100000000000000000000000000000000000000000000000000000000000000',
-          ],
-        );
-        dapi.oracleInfo.anchor = res.address;
+        //let res = await phala.deployWithWeb3(
+        //  dapi.oracleInfo.targetChain.httpProvider,
+        //  sponsorMnemonic,
+        //  artifact.abi,
+        //  artifact.bytecode,
+        //  [
+        //    dapi.oracleInfo.wallet,
+        //    saas3ProtocolAddress,
+        //    '0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000017100000000000000000000000000000000000000000000000000000000000000',
+        //  ],
+        //);
+        //dapi.oracleInfo.anchor = res.address;
+        dapi.oracleInfo.anchor = '0x10E0271ec47d55511a047516f2a7301801d55eaB';
         console.log('anchor deployed at', dapi.oracleInfo.anchor);
       }
 
@@ -127,9 +128,20 @@ export class DapiService {
       } else if (dapi.oracleInfo.web2Info.authType == AuthType.ApiKeyInHeader) {
         for (let h in dapi.oracleInfo.web2Info.headers) {
           console.log(h);
+          if (h.startsWith('__saas3_apikey_')) {
+            let key = h.replace('__saas3_apikey_', '');
+            let v = dapi.oracleInfo.web2Info.headers[h];
+            apikey = key + ':' + v;
+          }
         }
       }
+      apikey = 'sdfsfsdf';
 
+      console.log(
+        'configuring fat contract druntime',
+        dapi.oracleInfo.address,
+        '...',
+      );
       // config druntime
       await phala.configFatContract(
         sponsorMnemonic,
@@ -137,17 +149,18 @@ export class DapiService {
         dapi.oracleInfo.sourceChain.pruntime,
         this.configService.get('DRUNTIME_FAT_PATH'),
         this.configService.get('PHALA_SYSTEM_PATH'),
+        dapi.oracleInfo.address,
         'config',
-        {
-          target_chain_rpc: dapi.oracleInfo.targetChain.httpProvider,
-          anchor_contract_addr: dapi.oracleInfo.anchor,
-          submit_key: dapi.oracleInfo.privateKey,
-          web2_api_url_prefix: dapi.oracleInfo.web2Info.uri,
-          js_engine_code_hash: jsEngineCodeHash,
-          method: dapi.oracleInfo.web2Info.method.toUpperCase(),
-          auth_type: dapi.oracleInfo.web2Info.authType,
-          api_key: apikey,
-        },
+        [
+          dapi.oracleInfo.targetChain.httpProvider,
+          dapi.oracleInfo.anchor,
+          dapi.oracleInfo.privateKey,
+          jsEngineCodeHash,
+          dapi.oracleInfo.web2Info.uri,
+          apikey,
+          dapi.oracleInfo.web2Info.method.toUpperCase(),
+          AuthType[dapi.oracleInfo.web2Info.authType],
+        ],
       );
     }
 
