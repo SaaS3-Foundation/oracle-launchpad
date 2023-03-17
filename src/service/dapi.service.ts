@@ -11,7 +11,6 @@ import { ChainRepository } from 'src/model/chain/chain.respository';
 import { nanoid } from 'nanoid';
 import { Web2InfoEntity } from 'src/model/web2Info/web2Info.entity';
 import { OracleEntity } from 'src/model/oracle/oracle.entity';
-import { apiCallParametersSchema } from '@api3/airnode-node/dist/src/validation';
 import { AuthType } from 'src/model/web2Info/types';
 
 @Injectable()
