@@ -105,19 +105,19 @@ export class DapiService {
           this.configService.get('PHALA_ANCHOR_PATH'),
         );
         console.log('anchor artifact loaded.');
-        //let res = await phala.deployWithWeb3(
-        //  dapi.oracleInfo.targetChain.httpProvider,
-        //  sponsorMnemonic,
-        //  artifact.abi,
-        //  artifact.bytecode,
-        //  [
-        //    dapi.oracleInfo.wallet,
-        //    saas3ProtocolAddress,
-        //    '0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000017100000000000000000000000000000000000000000000000000000000000000',
-        //  ],
-        //);
-        //dapi.oracleInfo.anchor = res.address;
-        dapi.oracleInfo.anchor = '0x10E0271ec47d55511a047516f2a7301801d55eaB';
+        let res = await phala.deployWithWeb3(
+          dapi.oracleInfo.targetChain.httpProvider,
+          sponsorMnemonic,
+          artifact.abi,
+          artifact.bytecode,
+          [
+            dapi.oracleInfo.wallet,
+            saas3ProtocolAddress,
+            '0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000017100000000000000000000000000000000000000000000000000000000000000',
+          ],
+        );
+        dapi.oracleInfo.anchor = res.address;
+        //dapi.oracleInfo.anchor = '0x10E0271ec47d55511a047516f2a7301801d55eaB';
         console.log('anchor deployed at', dapi.oracleInfo.anchor);
       }
 

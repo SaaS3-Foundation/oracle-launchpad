@@ -90,20 +90,8 @@ export async function configFatContract(
   const connectedWorker = hex((await prpc.getInfo({})).publicKey);
   console.log('Connected worker:', connectedWorker);
 
-  const newApi = await api.clone().isReady;
   console.log('attaching fat contract', artifact.address, '...');
-  //const t = await Phala.create({
-  //  api: newApi,
-  //  baseURL: pruntimeUrl,
-  //  contractId: artifact.address,
-  //  autoDeposit: true,
-  //});
-  //console.log(t);
-  //const contract = new ContractPromise(
-  //  t.api,
-  //  artifact.contract,
-  //  artifact.address,
-  //);
+
   let contract = await contractApi(api, pruntimeUrl, artifact);
   console.log('Fat Contract: connected', artifact.address);
 
