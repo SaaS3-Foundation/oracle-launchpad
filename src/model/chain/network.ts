@@ -14,6 +14,12 @@ export const network = [
     httpProvider: 'https://bsc.mytokenpocket.vip',
   },
   {
+    name: 'OKExChain Mainnet',
+    type: ChainType.EVM,
+    chainId: '66',
+    httpProvider: 'https://exchainrpc.okex.org',
+  },
+  {
     name: 'Moonbase Alpha',
     type: ChainType.EVM,
     chainId: '1287',
