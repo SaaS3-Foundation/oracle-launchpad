@@ -5,18 +5,18 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 async function bootstrap() {
   const isExistsKey = existsSync('./secrets/rpc.saas3.io.key');
 
-  //const app = await NestFactory.create(
-  //  AppModule,
-  //  isExistsKey
-  //    ? {
-  //        httpsOptions: {
-  //          key: readFileSync('./secrets/rpc.saas3.io.key'),
-  //          cert: readFileSync('./secrets/rpc.saas3.io_bundle.crt'),
-  //        },
-  //      }
-  //    : {},
-  //);
-  const app = await NestFactory.create(AppModule, {});
+  const app = await NestFactory.create(
+    AppModule,
+    isExistsKey
+      ? {
+          httpsOptions: {
+            key: readFileSync('./secrets/rpc.saas3.io.key'),
+            cert: readFileSync('./secrets/rpc.saas3.io_bundle.crt'),
+          },
+        }
+      : {},
+  );
+  //const app = await NestFactory.create(AppModule, {});
   app.enableCors();
 
   const config = new DocumentBuilder()
