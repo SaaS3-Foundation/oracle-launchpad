@@ -43,6 +43,7 @@ export class DapiService {
 
   async deployQjs(): Promise<any> {
     const sponsorMnemonic = this.configService.get('SPONSOR_MNEMONIC');
+    const systemContractPath = this.configService.get('PHALA_SYSTEM_PATH');
     await phala.deployFatContract(
       sponsorMnemonic,
       '0x0000000000000000000000000000000000000000000000000000000000000000',
@@ -50,6 +51,7 @@ export class DapiService {
       'http://localhost:18000',
       this.configService.get('QJS_PATH'),
       true,
+      systemContractPath,
     );
   }
 
@@ -89,6 +91,8 @@ export class DapiService {
         dapi.oracleInfo.sourceChain.wsProvider,
         dapi.oracleInfo.sourceChain.pruntime,
         this.configService.get('DRUNTIME_FAT_PATH'),
+        false,
+        this.configService.get('PHALA_SYSTEM_PATH'),
       );
       // druntime need anchor contract address, we'll do it later
 

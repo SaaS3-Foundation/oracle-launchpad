@@ -130,6 +130,7 @@ export async function deployFatContract(
   pruntimeUrl: string,
   contractPath: string,
   isQjs: boolean = false,
+  systemContractPath,
 ) {
   // Create a keyring instance
   const keyring = new Keyring({ type: 'sr25519' });
@@ -173,6 +174,7 @@ export async function deployFatContract(
     pruntimeUrl,
     '',
     isQjs,
+    systemContractPath,
   );
   artifact.address = address;
   console.log(address);
@@ -195,8 +197,20 @@ export async function submit(
   pruntimeUrl,
   salt,
   isQjs: boolean = false,
+  systemContractPath,
 ) {
   salt = salt || hex(crypto.randomBytes(4));
+
+  console.log('transfering to cluster ...');
+  await txqueue.submit(
+    api.tx.phalaFatContracts.transferToCluster(
+      2e12,
+      clusterId,
+      account.address,
+    ),
+    account,
+  );
+
   console.log('Contracts: uploading', artifact.name);
 
   // upload the contract
@@ -228,9 +242,7 @@ export async function submit(
   await sleep(10000);
   console.log(`Contracts: ${artifact.name} uploaded`);
 
-  const system = loadFatContract(
-    '/Users/songtianyi/workhub/github/phala-blockchain/e2e/res/system.contract',
-  );
+  const system = loadFatContract(systemContractPath);
   console.log('system loaded ', system.name, system.hash);
 
   console.log('quering cluster', clusterId);
