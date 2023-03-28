@@ -109,7 +109,7 @@ export async function configFatContract(
           ? estimate.storageDeposit.asCharge
           : null,
       },
-      ...args, // args 或者 ...args 都是同样的错误
+      ...args,
     ),
     sponsor,
     true,
