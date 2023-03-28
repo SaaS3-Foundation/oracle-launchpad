@@ -41,4 +41,16 @@ export const network = [
     wsProvider: 'ws://localhost:19944',
     pruntime: 'http://localhost:18000',
   },
+  {
+    type: ChainType.EVM,
+    name: 'MAPO Mainnet',
+    chainId: '22776',
+    httpProvider: 'https://rpc.maplabs.io',
+  },
+  {
+    type: ChainType.EVM,
+    name: 'MAPO Makalu Testnet',
+    chainId: '212',
+    httpProvider: 'https://testnet-rpc.maplabs.io',
+  },
 ];

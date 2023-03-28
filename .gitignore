@@ -44,3 +44,5 @@ workspace/evm/*/hardhat.config.ts
 cache
 nohup.out
 secrets
+
+*.tar

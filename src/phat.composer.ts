@@ -163,6 +163,18 @@ export async function deployFatContract(
   const connectedWorker = hex((await prpc.getInfo({})).publicKey);
   console.log('Connected worker:', connectedWorker);
 
+  const accountInfo = await api.query.system.account(sponsor.address);
+  // @ts-ignore
+  const free = accountInfo.data.free.div(new BN(1e10)) / 100;
+  if (free < 20) {
+    console.log(
+      'Not enough balance. Please transfer some tokens not less then 20 PHA to',
+      sponsor.address,
+    );
+    throw new Error('Not enough balance.');
+  }
+  console.log(`Account ${sponsor.address} has ${free} PHA.`);
+
   // contracts
   const address = await submit(
     api,
