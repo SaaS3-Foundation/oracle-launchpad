@@ -1,6 +1,6 @@
 {
   "name": "@saas3/oracle-launchpad",
-  "version": "2.2.3",
+  "version": "2.2.4",
   "description": "dAPI web tool backend and contracts",
   "author": "Tianyi Song <tianyi@saas3.io>",
   "private": false,
