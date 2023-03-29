@@ -7,6 +7,7 @@ import { ContractPromise } from '@polkadot/api-contract';
 import { typeDefinitions } from '@polkadot/types';
 import * as Phala from '@phala/sdk';
 import * as utils from './utils/oracle.utils';
+import BN from 'bn.js';
 import {
   TxQueue,
   blockBarrier,
