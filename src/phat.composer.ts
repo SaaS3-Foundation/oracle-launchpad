@@ -378,16 +378,20 @@ export async function deployWithWeb3(
   const signer = web3.eth.accounts.privateKeyToAccount(prikey);
   web3.eth.accounts.wallet.add(signer);
 
+  let gas_price = await web3.eth.getGasPrice();
+  console.log('gas_price', gas_price);
+
   const incrementer = new web3.eth.Contract(abi);
   const incrementerTx = incrementer.deploy({
     data: bytecode,
     arguments: args,
   });
+  let eg = await incrementerTx.estimateGas();
   const tx = await web3.eth.accounts.signTransaction(
     {
       data: incrementerTx.encodeABI(),
-      gas: await incrementerTx.estimateGas(),
-      //gasPrice: web3.utils.toWei('1000', 'gwei'),
+      gas: eg * 2,
+      gasPrice: gas_price,
     },
     accountFrom.privateKey,
   );
